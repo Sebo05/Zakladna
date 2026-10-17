@@ -22,7 +22,18 @@ vendor/bin/tester tests
 
 ## Desktop widget (Windows)
 
-`widget/build.cmd` zkompiluje `AnoWidget.exe` (.NET Framework 4, bez instalace). Vedle exe dej `widget.ini` podle `widget.ini.example` — heslo se po prvním spuštění zašifruje (DPAPI). Data bere z `GET /api/widget`.
+`widget/build.cmd` zkompiluje `AnoWidget.exe` (.NET Framework 4, bez instalace). Při prvním spuštění se zeptá na adresu aplikace a otevře prohlížeč: uživatel se přihlásí (i přes Google) a klikne Povolit (`/app/widget/`), widget dostane token přes loopback `127.0.0.1` a uloží ho šifrovaně (DPAPI) do `widget.ini`. Data bere z `GET /api/widget` (Bearer token). Odpojení: Profil → Widget → Odpojit.
+
+## Přihlášení přes Google
+
+OAuth client (Web application) v Google Cloud Console, redirect URI `<appUrl>/login/google`. Hodnoty do `config/local.neon`:
+
+```neon
+parameters:
+	google:
+		clientId: ...
+		clientSecret: ...
+```
 
 ## Cron (upozornění + banka)
 
