@@ -1,0 +1,47 @@
+{import '../@components.latte'}
+{block title}Nastavení domácnosti{/block}
+
+{block content}
+{include '@nav.latte'}
+{var $isOwner = $household->owner->id === $me->id}
+
+<div class="grid lg:grid-cols-2 gap-5">
+	<section class="card p-6 self-start rise rise-2">
+		<h2 class="section-title mb-4">Název</h2>
+		{if $isOwner}
+			{form renameForm, class: 'flex gap-2'}
+				{input name, class: 'input'}
+				{input send, class: 'btn btn-primary'}
+			{/form}
+		{else}
+			<p class="font-medium">{$household->name}</p>
+			<p class="text-xs text-muted mt-1">Název může měnit jen správce ({$household->owner->name}).</p>
+		{/if}
+
+		<h2 class="section-title mt-8 mb-2">Kód pozvánky</h2>
+		<div class="flex items-center gap-3">
+			<div class="num font-mono text-2xl font-semibold tracking-[0.3em] flex-1 text-center py-3 rounded-2xl bg-surface-2">{$household->inviteCode}</div>
+			<a n:if="$isOwner" n:href="regenerateCode!" data-confirm="Vytvořit nový kód? Starý kód i odkaz přestanou platit." class="btn btn-secondary">Nový kód</a>
+		</div>
+	</section>
+
+	<section class="card p-6 self-start rise rise-3">
+		<h2 class="section-title mb-2">Členové</h2>
+		<div>
+			<div n:foreach="$members as $m" class="list-row">
+				<span class="w-8 h-8 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$m->name|substr:0,1|upper}</span>
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium truncate">{$m->name}{if $m->id === $me->id} <span class="text-muted font-normal">(ty)</span>{/if}</div>
+					<div class="text-xs text-muted truncate">{$m->email}</div>
+				</div>
+				<span n:if="$m->id === $household->owner->id" class="badge badge-accent">Správce</span>
+				<a n:if="$isOwner && $m->id !== $me->id" n:href="removeMember!, id: $m->id" data-confirm="Odebrat {$m->name} z domácnosti?" class="btn-icon danger" title="Odebrat"><i data-lucide="x" class="w-4 h-4"></i></a>
+			</div>
+		</div>
+	</section>
+</div>
+
+<div class="mt-8 text-center rise rise-4">
+	<a n:href="leave" data-confirm="{count($members) === 1 ? 'Jsi poslední člen – domácnost i všechna sdílená data se smažou. Pokračovat?' : 'Opravdu opustit domácnost?'}" class="btn btn-danger"><i data-lucide="log-out" class="w-4 h-4"></i>Opustit domácnost</a>
+</div>
+{/block}

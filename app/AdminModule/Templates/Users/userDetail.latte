@@ -1,0 +1,53 @@
+{block title}{$detailUser->name}{/block}
+
+{block content}
+{var $hh = $household}
+<a n:href="default" class="btn btn-ghost -ml-3 mb-3 text-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i>Uživatelé</a>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+	{* Profile *}
+	<section class="card p-6 rise">
+		<div class="flex flex-col items-center text-center">
+			<span class="w-20 h-20 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-3xl font-semibold flex items-center justify-center">{$detailUser->name|substr:0,1|upper}</span>
+			<h1 class="text-xl font-semibold tracking-tight mt-4">{$detailUser->name}</h1>
+			<a href="mailto:{$detailUser->email}" class="text-sm text-muted hover:text-accent">{$detailUser->email}</a>
+			<div class="flex flex-wrap justify-center gap-1.5 mt-3">
+				<span class="badge">ID {$detailUser->id}</span>
+				<span n:if="$detailUser->dashboardLayout" class="badge badge-accent">Vlastní přehled</span>
+			</div>
+		</div>
+		<dl class="mt-6 text-sm">
+			<div class="list-row"><dt class="flex-1 text-muted">Registrace</dt><dd>{$detailUser->createdAt|date:'j. n. Y H:i'}</dd></div>
+			<div class="list-row">
+				<dt class="flex-1 text-muted">Domácnost</dt>
+				<dd>
+					<a n:if="$hh" n:href="Households:detail $hh['id']" class="text-accent hover:underline">{$hh['name']}</a>{if $hh && $hh['owner']} <span class="badge">správce</span>{/if}
+					<span n:if="!$hh" class="text-faint">—</span>
+				</dd>
+			</div>
+		</dl>
+		<div class="grid grid-cols-2 gap-2 mt-6">
+			<a n:href="userChangePassword $detailUser->id" class="btn btn-secondary"><i data-lucide="lock" class="w-4 h-4"></i>Heslo</a>
+			<a n:href="userDelete $detailUser->id" data-confirm="Smazat uživatele {$detailUser->name} včetně všech dat? Pokud spravuje domácnost, správa přejde na dalšího člena." class="btn btn-danger"><i data-lucide="trash-2" class="w-4 h-4"></i>Smazat</a>
+		</div>
+	</section>
+
+	{* Activity — counts and dates only (GDPR) *}
+	<section class="lg:col-span-2 card p-5 sm:p-6 min-w-0 rise rise-2">
+		<div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+			<h2 class="section-title">Aktivita</h2>
+			<span class="badge"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Jen počty, bez obsahu a částek</span>
+		</div>
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+			<div n:foreach="$activity as $a" class="list-row">
+				<span n:class="'tile', $a->n ? 'bg-accent/12 text-accent' : 'bg-surface-2 text-faint'"><i data-lucide="{$a->icon}"></i></span>
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium">{$a->label}</div>
+					<div class="text-xs text-muted">{if $a->last}naposledy {$a->last|date:'j. n. Y'}{elseif !$a->n}nepoužívá{else}&nbsp;{/if}</div>
+				</div>
+				<span n:class="'num text-lg font-semibold', !$a->n ? 'text-faint'">{$a->n}</span>
+			</div>
+		</div>
+	</section>
+</div>
+{/block}

@@ -1,0 +1,31 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Runtime
+/temp/*
+/log/*
+!/temp/.gitkeep
+!/log/.gitkeep
+
+# Build output (npm run build)
+/www/assets/
+
+# User uploads
+/www/upload/*
+!/www/upload/.gitkeep
+
+# Local config with credentials
+/config/local.neon
+
+# Widget: local settings (DPAPI password) + compiled exe
+/widget/widget.ini
+/widget/*.exe
+
+# Tooling
+/.claude/
+/.playwright-mcp/
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,31 @@
+{import '../@components.latte'}
+{var $hex = ['blue' => '#0a84ff', 'green' => '#30d158', 'orange' => '#ff9f0a', 'pink' => '#ff375f', 'violet' => '#bf5af2', 'teal' => '#40c8e0']}
+{form goalForm, class: 'space-y-5'}
+	{include formErrors, form: $form}
+	{include field, form: $form, name: 'name'}
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'targetAmount'}
+		{include field, form: $form, name: 'deadline', hint: 'S termínem ti spočítáme měsíční částku.'}
+	</div>
+	<div>
+		<span class="label">Barva</span>
+		<div class="flex gap-3">
+			{foreach $form['color']->getItems() as $key => $_}
+				<label class="cursor-pointer">
+					<input n:name="color:$key" class="peer sr-only">
+					<span class="block w-9 h-9 rounded-full ring-offset-2 ring-offset-[var(--surface)] peer-checked:ring-2 peer-focus-visible:ring-2 transition" style="background: {$hex[$key]|noescape}; --tw-ring-color: {$hex[$key]|noescape}"></span>
+				</label>
+			{/foreach}
+		</div>
+	</div>
+	{if $hasHousehold}
+		<label class="flex items-start gap-3 p-4 rounded-xl bg-surface-2 cursor-pointer">
+			{input shared:, class: 'mt-0.5 w-5 h-5 accent-[var(--accent)]'}
+			<span>
+				<span class="block text-sm font-medium">Společný cíl domácnosti</span>
+				<span class="block text-xs text-muted mt-0.5">Uvidí ho a přispívat do něj můžou všichni členové.</span>
+			</span>
+		</label>
+	{/if}
+	<div class="pt-2">{input send, class: 'btn btn-primary btn-lg'}</div>
+{/form}

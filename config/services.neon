@@ -1,0 +1,34 @@
+extensions:
+	nextras.dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
+	nextras.orm: Nextras\Orm\Bridges\NetteDI\OrmExtension
+
+nextras.dbal:
+	driver: mysqli
+	host: 127.0.0.1
+	username: root
+	password: ''
+	database: ano
+	connectionTz: '+00:00'
+
+nextras.orm:
+	model: App\Model\Orm
+
+
+services:
+	- App\Core\RouterFactory::createRouter
+
+	adminAuthenticator:
+		factory: App\AdminModule\Authenticator
+		autowired: self
+
+	userAuthenticator:
+		factory: App\FrontendModule\Authenticator
+		autowired: self
+
+
+search:
+	-	in: %appDir%
+		files:
+			- '*Facade.php'
+			- '*Factory.php'
+			- '*Service.php'

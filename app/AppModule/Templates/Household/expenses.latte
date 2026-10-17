@@ -1,0 +1,72 @@
+{import '../@components.latte'}
+{block title}Společné výdaje{/block}
+
+{block content}
+{include '@nav.latte'}
+
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+	<section class="card p-6 lg:col-span-2 self-start rise rise-2">
+		<h2 class="section-title mb-4">Nový výdaj</h2>
+		{form expenseForm, class: 'space-y-4'}
+			{include formErrors, form: $form}
+			<div class="grid sm:grid-cols-2 gap-3">
+				{include field, form: $form, name: 'amount'}
+				{include field, form: $form, name: 'date'}
+			</div>
+			{include field, form: $form, name: 'description'}
+			<div class="grid sm:grid-cols-2 gap-3">
+				{include field, form: $form, name: 'category'}
+				{include field, form: $form, name: 'paidBy'}
+			</div>
+			<div>
+				<span class="label">Rozdělit rovným dílem mezi</span>
+				<div class="flex flex-wrap gap-2">
+					{foreach $form['splitAmong']->getItems() as $id => $name}
+						<label class="cursor-pointer">
+							<input n:name="splitAmong:$id" class="peer sr-only">
+							<span class="badge badge-muted text-sm! px-3! py-1.5! peer-checked:bg-accent! peer-checked:text-white! transition">{$name}</span>
+						</label>
+					{/foreach}
+				</div>
+				<p n:foreach="$form['splitAmong']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+			</div>
+			<datalist id="hh-categories"><option n:foreach="$categories as $c" value="{$c}"></option></datalist>
+			{input send, class: 'btn btn-primary w-full'}
+		{/form}
+	</section>
+
+	<section class="card p-6 lg:col-span-3 rise rise-3">
+		<h2 class="section-title mb-2">Historie</h2>
+		{var $any = false}
+		<div>
+			{foreach $expenses as $e}
+				{var $any = true}
+				<div class="list-row group">
+					<span class="tile bg-surface-2 text-muted"><i data-lucide="receipt"></i></span>
+					<div class="flex-1 min-w-0">
+						<div class="text-sm font-medium truncate">{$e->description}</div>
+						<div class="text-xs text-muted truncate">Platil(a) {$e->paidBy->name} · {$e->date|date:'j. n. Y'} · {$e->category} · dělí {count($e->shares)}</div>
+					</div>
+					<div class="text-right">
+						<div class="num text-sm font-semibold">{$e->amount|czk}</div>
+						{foreach $e->shares as $s}{if $s->user->id === $me->id}<div class="num text-xs text-muted">tvůj podíl {$s->amount|czk}</div>{/if}{/foreach}
+					</div>
+					<a n:if="$e->paidBy->id === $me->id || $household->owner->id === $me->id" n:href="deleteExpense $e->id" data-confirm="Smazat výdaj?" class="btn-icon danger sm:opacity-0 group-hover:opacity-100" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+				</div>
+			{/foreach}
+		</div>
+		<p n:if="!$any" class="text-sm text-muted py-10 text-center">Zatím nic. Přidej první společný výdaj.</p>
+
+		{var $anyS = false}
+		{foreach $settlements as $s}
+			{if !$anyS}<h3 class="text-sm font-semibold text-muted mt-6 mb-1">Vyrovnání</h3>{var $anyS = true}{/if}
+			<div class="list-row text-sm">
+				<span class="tile bg-pos/12 text-pos"><i data-lucide="check"></i></span>
+				<span class="flex-1">{$s->fromUser->name} → {$s->toUser->name}</span>
+				<span class="text-xs text-muted">{$s->date|date:'j. n.'}</span>
+				<span class="num font-semibold">{$s->amount|czk}</span>
+			</div>
+		{/foreach}
+	</section>
+</div>
+{/block}

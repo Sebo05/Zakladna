@@ -1,0 +1,6 @@
+{import '../@components.latte'}
+{block title}Nový rozpočet{/block}
+{block content}
+{include formHeader, title: 'Nový rozpočet', back: $presenter->link('default'), backLabel: 'Rozpočty'}
+<div class="card p-6 sm:p-8 max-w-2xl rise rise-2">{include _form.latte}</div>
+{/block}

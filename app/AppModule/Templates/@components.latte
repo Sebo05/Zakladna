@@ -1,0 +1,38 @@
+{* Shared UI snippets for the App module. Use: {import '../@components.latte'} then {include daysBadge, days: 5} *}
+
+{define daysBadge, int $days}
+	{if $days < 0}<span class="badge badge-neg">propadlé</span>
+	{elseif $days === 0}<span class="badge badge-neg">dnes</span>
+	{elseif $days <= 14}<span class="badge badge-warn">za {$days} {$days === 1 ? 'den' : ($days < 5 ? 'dny' : 'dní')}</span>
+	{else}<span class="badge badge-pos">za {$days} dní</span>
+	{/if}
+{/define}
+
+{define docIcon, string $type}
+	{var $map = ['stk' => ['wrench', 'bg-orange-500/12 text-orange-500'], 'insurance' => ['shield-check', 'bg-sky-500/12 text-sky-500'], 'vignette' => ['ticket', 'bg-violet-500/12 text-violet-500']]}
+	{var $m = $map[$type] ?? ['file-text', 'bg-surface-2 text-muted']}
+	<span class="tile {$m[1]}"><i data-lucide="{$m[0]}"></i></span>
+{/define}
+
+{define field, $form, string $name, ?string $hint = null}
+	<div>
+		{label $name, class: 'label' /}
+		{input $name, class: 'input'}
+		<p n:if="$hint" class="text-xs text-muted mt-1.5">{$hint}</p>
+		<p n:foreach="$form[$name]->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+	</div>
+{/define}
+
+{define formErrors, $form}
+	<div n:ifcontent class="rounded-xl px-4 py-3 text-sm bg-neg/10 text-neg">
+		<p n:foreach="$form->getOwnErrors() as $e">{$e}</p>
+	</div>
+{/define}
+
+{define formHeader, string $title, string $back, string $backLabel, ?string $sub = null}
+	<header class="mb-8 rise">
+		<a href="{$back}" class="inline-flex items-center gap-1 text-sm text-accent hover:underline mb-3"><i data-lucide="chevron-left" class="w-4 h-4"></i>{$backLabel}</a>
+		<h1 class="page-title">{$title}</h1>
+		<p n:if="$sub" class="page-sub">{$sub}</p>
+	</header>
+{/define}

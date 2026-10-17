@@ -1,0 +1,95 @@
+{block title}Uživatelé{/block}
+
+{block content}
+<div x-data="{ tab: 'users', q: '', filter: 'all' }">
+<header class="flex flex-wrap items-end justify-between gap-4 mb-6 rise">
+	<div>
+		<div class="eyebrow">Administrace</div>
+		<h1 class="page-title mt-1">Uživatelé</h1>
+		<p class="page-sub">{count($users)} účtů v aplikaci · {iterator_count($admins)} administrátorů</p>
+	</div>
+	<div class="segmented">
+		<button type="button" @click="tab = 'users'" :class="tab === 'users' && 'on'">Uživatelé</button>
+		<button type="button" @click="tab = 'admins'" :class="tab === 'admins' && 'on'">Administrátoři</button>
+	</div>
+</header>
+
+{* Users *}
+<section x-show="tab === 'users'" class="rise rise-2">
+	<div class="flex flex-wrap gap-3 mb-4">
+		<div class="relative flex-1 min-w-56">
+			<i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"></i>
+			<input type="search" x-model="q" placeholder="Hledat jméno nebo e-mail…" class="input pl-10">
+		</div>
+		<div class="segmented">
+			<button type="button" @click="filter = 'all'" :class="filter === 'all' && 'on'">Všichni</button>
+			<button type="button" @click="filter = 'household'" :class="filter === 'household' && 'on'">V domácnosti</button>
+			<button type="button" @click="filter = 'empty'" :class="filter === 'empty' && 'on'">Bez dat</button>
+		</div>
+	</div>
+
+	<div class="card overflow-x-auto">
+		<table class="w-full text-sm">
+			<thead class="text-left text-xs text-muted border-b border-line">
+				<tr>
+					<th class="px-5 py-3 font-medium">Uživatel</th>
+					<th class="px-3 py-3 font-medium">Registrace</th>
+					<th class="px-3 py-3 font-medium">Domácnost</th>
+					<th class="px-3 py-3 font-medium text-center" title="Auta"><i data-lucide="car" class="w-4 h-4 inline"></i></th>
+					<th class="px-3 py-3 font-medium text-center" title="Transakce"><i data-lucide="wallet" class="w-4 h-4 inline"></i></th>
+					<th class="px-3 py-3 font-medium text-center" title="Cíle"><i data-lucide="target" class="w-4 h-4 inline"></i></th>
+					<th class="px-3 py-3 font-medium text-center" title="Události"><i data-lucide="calendar" class="w-4 h-4 inline"></i></th>
+					<th class="px-3 py-3 font-medium text-center" title="Upravený přehled"><i data-lucide="sliders-horizontal" class="w-4 h-4 inline"></i></th>
+					<th class="px-5 py-3"></th>
+				</tr>
+			</thead>
+			<tbody class="divide-y divide-line">
+				{foreach $users as $u}
+				{var $empty = !$u->household_id && !$u->cars && !$u->transactions && !$u->goals && !$u->events}
+				<tr class="hover:bg-surface-2 transition-colors"
+					data-search="{mb_strtolower($u->name . ' ' . $u->email)}" data-household="{$u->household_id ? 1 : 0}" data-empty="{$empty ? 1 : 0}"
+					x-show="$el.dataset.search.includes(q.toLowerCase()) && (filter === 'all' || (filter === 'household' && $el.dataset.household === '1') || (filter === 'empty' && $el.dataset.empty === '1'))">
+					<td class="px-5 py-3">
+						<a n:href="userDetail $u->id" class="flex items-center gap-3 group">
+							<span class="w-9 h-9 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$u->name|substr:0,1|upper}</span>
+							<span class="min-w-0">
+								<span class="block font-medium truncate group-hover:text-accent">{$u->name}</span>
+								<span class="block text-xs text-muted truncate">{$u->email}</span>
+							</span>
+						</a>
+					</td>
+					<td class="px-3 py-3 text-muted whitespace-nowrap">{$u->created_at|date:'j. n. Y'}</td>
+					<td class="px-3 py-3">
+						<a n:if="$u->household_id" n:href="Households:detail $u->household_id" class="badge hover:text-accent">{$u->household_name}</a>
+						<span n:if="!$u->household_id" class="text-faint">—</span>
+					</td>
+					<td n:foreach="[$u->cars, $u->transactions, $u->goals, $u->events] as $n" n:class="'px-3 py-3 text-center num', $n ? 'font-medium' : 'text-faint'">{$n}</td>
+					<td class="px-3 py-3 text-center">
+						<i n:if="$u->customised" data-lucide="check" class="w-4 h-4 inline text-pos"></i>
+						<span n:if="!$u->customised" class="text-faint">—</span>
+					</td>
+					<td class="px-5 py-3 text-right whitespace-nowrap">
+						<a n:href="userDetail $u->id" class="btn-icon" title="Detail"><i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+					</td>
+				</tr>
+				{/foreach}
+				<tr n:if="!$users"><td colspan="9" class="px-5 py-10 text-center text-muted">Zatím žádní uživatelé.</td></tr>
+			</tbody>
+		</table>
+	</div>
+</section>
+
+{* Admins *}
+<section x-show="tab === 'admins'" x-cloak class="card p-2 sm:p-4 max-w-3xl">
+	<a n:foreach="$admins as $a" n:href="adminDetail $a->id" class="list-row group px-3">
+		<span class="w-9 h-9 rounded-full bg-linear-to-br from-violet-500 to-fuchsia-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$a->name|substr:0,1|upper}</span>
+		<div class="flex-1 min-w-0">
+			<div class="text-sm font-medium truncate group-hover:text-accent">{$a->name} <span n:if="$a->id === $user->getId()" class="badge badge-accent ml-1">Ty</span></div>
+			<div class="text-xs text-muted truncate">{$a->email}</div>
+		</div>
+		<span class="text-xs text-muted whitespace-nowrap">od {$a->createdAt|date:'j. n. Y'}</span>
+		<i data-lucide="chevron-right" class="w-4 h-4 text-faint"></i>
+	</a>
+</section>
+</div>
+{/block}

@@ -1,0 +1,23 @@
+{block title}{$admin->name}{/block}
+
+{block content}
+<a n:href="default" class="btn btn-ghost -ml-3 mb-3 text-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i>Uživatelé</a>
+<section class="card p-6 max-w-md rise">
+	<div class="flex items-center gap-4">
+		<span class="w-14 h-14 rounded-full bg-linear-to-br from-violet-500 to-fuchsia-500 text-white text-xl font-semibold flex items-center justify-center shrink-0">{$admin->name|substr:0,1|upper}</span>
+		<div class="min-w-0">
+			<h1 class="text-xl font-semibold tracking-tight truncate">{$admin->name}</h1>
+			<div class="text-sm text-muted truncate">{$admin->email}</div>
+		</div>
+		<span class="badge badge-accent ml-auto">Admin</span>
+	</div>
+	<dl class="mt-5 text-sm">
+		<div class="list-row"><dt class="flex-1 text-muted">ID</dt><dd class="num">{$admin->id}</dd></div>
+		<div class="list-row"><dt class="flex-1 text-muted">Vytvořen</dt><dd>{$admin->createdAt|date:'j. n. Y H:i'}</dd></div>
+	</dl>
+	<div class="flex gap-2 mt-6">
+		<a n:href="adminChangePassword $admin->id" class="btn btn-secondary flex-1"><i data-lucide="lock" class="w-4 h-4"></i>Změnit heslo</a>
+		<a n:if="$admin->id !== $user->getId()" n:href="adminDelete $admin->id" data-confirm="Smazat administrátora {$admin->name}?" class="btn btn-danger"><i data-lucide="trash-2" class="w-4 h-4"></i>Smazat</a>
+	</div>
+</section>
+{/block}

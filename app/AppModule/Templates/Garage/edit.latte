@@ -1,0 +1,6 @@
+{import '../@components.latte'}
+{block title}Upravit auto{/block}
+{block content}
+{include formHeader, title: 'Upravit auto', back: $presenter->link('detail', $car->id), backLabel: $car->name}
+<div class="max-w-5xl">{include _carForm.latte, cancelUrl: $presenter->link('detail', $car->id)}</div>
+{/block}

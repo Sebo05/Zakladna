@@ -1,0 +1,7 @@
+{import '../@components.latte'}
+{block title}Upravit událost{/block}
+{block content}
+{include formHeader, title: 'Upravit událost', back: $presenter->link('default'), backLabel: 'Kalendář'}
+<div class="card p-6 sm:p-8 max-w-2xl rise rise-2">{include _form.latte}</div>
+<div class="max-w-2xl mt-6 text-center"><a n:href="delete $event->id" data-confirm="Smazat událost?" class="btn btn-danger"><i data-lucide="trash-2" class="w-4 h-4"></i>Smazat událost</a></div>
+{/block}

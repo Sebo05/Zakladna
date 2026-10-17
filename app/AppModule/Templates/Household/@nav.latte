@@ -1,0 +1,22 @@
+{* Household header + tab bar. Include from each household view. *}
+<header class="mb-6 rise">
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<div class="flex items-center gap-4 min-w-0">
+			<span class="tile w-14 h-14 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 text-white"><i data-lucide="house" class="w-7! h-7!"></i></span>
+			<div class="min-w-0">
+				<h1 class="page-title truncate">{$household->name}</h1>
+				<div class="flex items-center -space-x-2 mt-1.5">
+					<span n:foreach="$members as $m" class="w-7 h-7 rounded-full ring-2 ring-[var(--canvas)] bg-linear-to-br from-sky-400 to-indigo-500 text-white text-xs font-semibold flex items-center justify-center" title="{$m->name}">{$m->name|substr:0,1|upper}</span>
+					<span class="pl-4 text-sm text-muted">{count($members)} {count($members) === 1 ? 'člen' : (count($members) < 5 ? 'členové' : 'členů')}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<nav class="segmented mt-6 overflow-x-auto max-w-full">
+		<a n:href="default" n:class="$presenter->isLinkCurrent('default') ? 'on'">Přehled</a>
+		<a n:href="expenses" n:class="$presenter->isLinkCurrent('expenses') ? 'on'">Výdaje</a>
+		<a n:href="lists" n:class="$presenter->isLinkCurrent('lists') ? 'on'">Úkoly a nákupy</a>
+		<a n:href="budget" n:class="$presenter->isLinkCurrent('budget') ? 'on'">Rozpočet</a>
+		<a n:href="settings" n:class="$presenter->isLinkCurrent('settings') ? 'on'">Nastavení</a>
+	</nav>
+</header>

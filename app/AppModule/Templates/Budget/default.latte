@@ -1,0 +1,79 @@
+{import '../@components.latte'}
+{block title}Rozpočty{/block}
+
+{block content}
+{var $totalPct = $totalLimit > 0 ? $totalSpent / $totalLimit * 100 : 0}
+<header class="flex flex-wrap items-end justify-between gap-4 mb-8 rise">
+	<div>
+		<h1 class="page-title">Rozpočty</h1>
+		<p class="page-sub first-letter:uppercase">{$now|czMonth} · zbývá {(int) $now->format('t') - (int) $now->format('j')} dní</p>
+	</div>
+	<a n:href="add" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Nový rozpočet</a>
+</header>
+
+{if $rows}
+	{* Total *}
+	<section class="card p-6 mb-5 rise rise-2">
+		<div class="flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<div class="eyebrow">Utraceno z rozpočtů</div>
+				<div class="num text-4xl font-semibold mt-1">{$totalSpent|czk} <span class="text-lg text-muted font-normal">z {$totalLimit|czk}</span></div>
+			</div>
+			<div n:class="'badge text-sm! px-3! py-1!', $totalPct > 100 ? 'badge-neg' : ($totalPct > $monthProgress ? 'badge-warn' : 'badge-pos')">
+				{if $totalPct > 100}Přečerpáno{elseif $totalPct > $monthProgress}Rychlejší než plán{else}V plánu{/if}
+			</div>
+		</div>
+		<div class="relative mt-5">
+			<div class="progress h-2!"><span n:class="$totalPct > 100 ? 'bg-neg' : 'bg-accent'" style="width: {round(min(100, $totalPct))}%"></span></div>
+			<div class="absolute -top-1 h-4 w-0.5 bg-ink/40 rounded" style="left: {round($monthProgress)}%" title="Dnešní den v měsíci"></div>
+		</div>
+		<p class="text-xs text-muted mt-2">Svislá čárka = kolik měsíce už uběhlo. Když je pruh za ní, utrácíš rychleji než plán.</p>
+	</section>
+
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+		{foreach $rows as $i => $r}
+			{var $over = $r['pct'] > 100}
+			{var $left = $r['budget']->monthlyLimit - $r['spent']}
+			<div class="card p-5 group rise" style="animation-delay: {$i * 50 + 100}ms">
+				<div class="flex items-start justify-between gap-2">
+					<div class="flex items-center gap-3 min-w-0">
+						<span n:class="'tile', $over ? 'bg-neg/12 text-neg' : 'bg-accent/12 text-accent'"><i data-lucide="target"></i></span>
+						<div class="font-semibold truncate">{$r['budget']->category}</div>
+					</div>
+					<div class="flex opacity-0 group-hover:opacity-100 transition">
+						<a n:href="edit $r['budget']->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+						<a n:href="delete $r['budget']->id" data-confirm="Smazat rozpočet?" class="btn-icon danger" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+					</div>
+				</div>
+				<div class="num text-2xl font-semibold mt-4">{$r['spent']|czk}</div>
+				<div class="text-sm text-muted">z {$r['budget']->monthlyLimit|czk}</div>
+				<div class="progress mt-4"><span n:class="$over ? 'bg-neg' : ($r['pct'] > $monthProgress ? 'bg-warn' : 'bg-pos')" style="width: {round(min(100, $r['pct']))}%"></span></div>
+				<div n:class="'text-xs mt-2 font-medium', $over ? 'text-neg' : 'text-muted'">
+					{if $over}Přečerpáno o {-$left|czk}{else}Zbývá {$left|czk} · {round($r['pct'])} %{/if}
+				</div>
+			</div>
+		{/foreach}
+	</div>
+{else}
+	<div class="card p-12 text-center rise">
+		<span class="tile bg-accent/12 text-accent mx-auto w-14 h-14 rounded-2xl"><i data-lucide="piggy-bank" class="w-7! h-7!"></i></span>
+		<h2 class="section-title mt-4">Zatím žádné rozpočty</h2>
+		<p class="text-muted mt-1 mb-6 max-w-md mx-auto">Nastav si měsíční limit pro kategorie jako Jídlo nebo Zábava a uvidíš, jestli jsi v plánu.</p>
+		<a n:href="add" class="btn btn-primary">Vytvořit rozpočet</a>
+	</div>
+{/if}
+
+{if $unbudgeted}
+	<section class="mt-8 rise rise-4">
+		<h2 class="section-title mb-3">Výdaje bez rozpočtu</h2>
+		<div class="card px-6 py-2">
+			<div n:foreach="$unbudgeted as $cat => $sum" class="list-row">
+				<span class="tile bg-surface-2 text-muted"><i data-lucide="tag"></i></span>
+				<div class="flex-1 font-medium text-sm">{$cat}</div>
+				<div class="num text-sm">{$sum|czk}</div>
+				<a n:href="add, category: $cat" class="btn btn-ghost text-sm">Nastavit limit</a>
+			</div>
+		</div>
+	</section>
+{/if}
+{/block}

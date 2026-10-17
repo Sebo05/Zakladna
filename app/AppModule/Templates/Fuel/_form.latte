@@ -1,0 +1,28 @@
+{import '../@components.latte'}
+{* Live price-per-liter readout is computed from the inputs without binding them (keeps server defaults on edit). *}
+<div x-data="{ ppl: null, calc() { const f = this.$root.querySelector('form'), n = (v) => parseFloat(v.replace(',', '.')), l = n(f.liters.value), p = n(f.priceTotal.value); this.ppl = l > 0 && p > 0 ? (p / l).toFixed(2).replace('.', ',') : null } }" x-init="calc()" @input="calc()">
+{form fuelForm, class: 'space-y-5'}
+	{include formErrors, form: $form}
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'date'}
+		{include field, form: $form, name: 'mileage', hint: $lastMileage ? 'Naposledy evidováno ' . number_format($lastMileage, 0, ',', ' ') . ' km' : null}
+	</div>
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'liters'}
+		{include field, form: $form, name: 'priceTotal'}
+	</div>
+	<div class="flex items-center gap-2 text-sm text-muted" x-show="ppl" x-cloak>
+		<i data-lucide="tag" class="w-4 h-4"></i> Cena za litr: <span class="num font-semibold text-ink" x-text="ppl + ' Kč'"></span>
+	</div>
+	{include field, form: $form, name: 'station'}
+	<label class="flex items-start gap-3 p-4 rounded-xl bg-surface-2 cursor-pointer">
+		{input fullTank:, class: 'mt-0.5 w-5 h-5 accent-[var(--accent)]'}
+		<span>
+			<span class="block text-sm font-medium">Plná nádrž</span>
+			<span class="block text-xs text-muted mt-0.5">Spotřeba se počítá mezi dvěma plnými nádržemi. Dotankování se připočte k další plné.</span>
+		</span>
+	</label>
+	<p class="text-xs text-muted flex items-center gap-1.5"><i data-lucide="receipt" class="w-3.5 h-3.5"></i>Částka se automaticky zapíše do Financí jako výdaj v kategorii „Palivo“.</p>
+	<div class="pt-2">{input send, class: 'btn btn-primary btn-lg'}</div>
+{/form}
+</div>

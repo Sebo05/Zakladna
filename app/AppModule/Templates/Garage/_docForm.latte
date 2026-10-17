@@ -1,0 +1,10 @@
+{import '../@components.latte'}
+{form documentForm, class: 'space-y-5'}
+	{include formErrors, form: $form}
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'type'}
+		{include field, form: $form, name: 'expiresAt'}
+	</div>
+	{include field, form: $form, name: 'note'}
+	<div class="pt-2">{input send, class: 'btn btn-primary btn-lg'}</div>
+{/form}

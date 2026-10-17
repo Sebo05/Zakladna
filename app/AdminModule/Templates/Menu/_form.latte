@@ -1,0 +1,12 @@
+{form menuForm, class: 'space-y-5'}
+	<div>{label label, class: 'label'/}{input label, class: 'input'}<p n:foreach="$form['label']->getErrors() as $e" class="form-error mt-1.5">{$e}</p></div>
+	<div>{label url, class: 'label'/}{input url, class: 'input font-mono text-sm'}<p n:foreach="$form['url']->getErrors() as $e" class="form-error mt-1.5">{$e}</p></div>
+	<div class="grid grid-cols-2 gap-4 items-end">
+		<div>{label position, class: 'label'/}{input position, class: 'input'}</div>
+		<label class="flex items-center gap-2 text-sm pb-3">{input visible} <span>Viditelná</span></label>
+	</div>
+	<div class="flex gap-3">
+		{input send, class: 'btn btn-primary'}
+		<a n:href="default" class="btn btn-secondary">Zrušit</a>
+	</div>
+{/form}

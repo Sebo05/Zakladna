@@ -1,0 +1,64 @@
+{import '../@components.latte'}
+{block title}Úkoly a nákupy{/block}
+
+{define item, $i, string $kind}
+	<div class="list-row group">
+		<a n:href="toggle!, id: $i->id" n:class="'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition', $i->done ? 'bg-pos border-transparent text-white' : 'border-line hover:border-accent'" title="{$i->done ? 'Vrátit' : 'Hotovo'}">
+			<i n:if="$i->done" data-lucide="check" class="w-3 h-3"></i>
+		</a>
+		<div class="flex-1 min-w-0">
+			<div n:class="'text-sm truncate', $i->done ? 'line-through text-faint' : 'font-medium'">{$i->title}</div>
+			<div n:if="$kind === 'task' && !$i->done && ($i->assignee || $i->dueDate)" class="flex flex-wrap gap-1.5 mt-1">
+				<span n:if="$i->assignee" class="badge badge-muted"><i data-lucide="user" class="w-3 h-3"></i>{$i->assignee->name}</span>
+				{if $i->dueDate}
+					{var $d = ($i->dueDate|daysUntil)}
+					<span n:class="'badge', $d < 0 ? 'badge-neg' : ($d <= 2 ? 'badge-warn' : 'badge-muted')"><i data-lucide="clock" class="w-3 h-3"></i>{$i->dueDate|date:'j. n.'}</span>
+				{/if}
+			</div>
+		</div>
+		<a n:href="deleteItem!, id: $i->id" class="btn-icon danger sm:opacity-0 group-hover:opacity-100" title="Smazat"><i data-lucide="x" class="w-4 h-4"></i></a>
+	</div>
+{/define}
+
+{block content}
+{include '@nav.latte'}
+
+<div class="grid lg:grid-cols-2 gap-5">
+	<section class="card p-6 self-start rise rise-2">
+		<div class="flex justify-between items-center mb-4">
+			<h2 class="section-title">Úkoly</h2>
+			<a n:if="array_filter($tasks, fn($i) => $i->done)" n:href="clearDone!, kind: 'task'" class="btn btn-ghost text-sm">Smazat hotové</a>
+		</div>
+		{form taskForm, class: 'space-y-2 mb-3'}
+			<div class="flex gap-2">
+				{input title, class: 'input'}
+				{input send, class: 'btn btn-primary'}
+			</div>
+			<div class="grid grid-cols-2 gap-2">
+				{input assignee, class: 'input py-2! text-sm!'}
+				{input dueDate, class: 'input py-2! text-sm!'}
+			</div>
+			<p n:foreach="$form->getErrors() as $e" class="form-error">{$e}</p>
+		{/form}
+		<div>
+			{foreach $tasks as $i}{include item, i: $i, kind: 'task'}{/foreach}
+		</div>
+		<p n:if="!$tasks" class="text-sm text-muted py-6 text-center">Žádné úkoly. Pohoda.</p>
+	</section>
+
+	<section class="card p-6 self-start rise rise-3">
+		<div class="flex justify-between items-center mb-4">
+			<h2 class="section-title">Nákupní seznam</h2>
+			<a n:if="array_filter($shopping, fn($i) => $i->done)" n:href="clearDone!, kind: 'shopping'" class="btn btn-ghost text-sm">Smazat koupené</a>
+		</div>
+		{form shoppingForm, class: 'flex gap-2 mb-3'}
+			{input title, class: 'input'}
+			{input send, class: 'btn btn-primary'}
+		{/form}
+		<div>
+			{foreach $shopping as $i}{include item, i: $i, kind: 'shopping'}{/foreach}
+		</div>
+		<p n:if="!$shopping" class="text-sm text-muted py-6 text-center">Seznam je prázdný.</p>
+	</section>
+</div>
+{/block}

@@ -1,0 +1,47 @@
+{block title}Statistiky{/block}
+
+{block content}
+<header class="mb-8 rise">
+	<h1 class="page-title">Statistiky</h1>
+	<p class="page-sub">Posledních 12 měsíců</p>
+</header>
+
+<div class="space-y-5">
+	<section class="card p-6 rise rise-2">
+		<h2 class="section-title mb-4">Příjmy a výdaje</h2>
+		<div class="h-72 sm:h-80">
+			<canvas data-chart="bar" data-chart-config="monthly"></canvas>
+		</div>
+		<script type="application/json" id="chart-monthly">{$monthlyData|noescape}</script>
+		<script type="application/json" id="chart-monthly-opts">{$baseOptions|noescape}</script>
+	</section>
+
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+		<section class="card p-6 rise rise-3">
+			<h2 class="section-title mb-4">Výdaje podle kategorie</h2>
+			{if $hasCategory}
+				<div class="h-72">
+					<canvas data-chart="doughnut" data-chart-config="category"></canvas>
+				</div>
+				<script type="application/json" id="chart-category">{$categoryData|noescape}</script>
+				<script type="application/json" id="chart-category-opts">{$doughnutOptions|noescape}</script>
+			{else}
+				<p class="text-sm text-muted py-12 text-center">Žádné výdaje k zobrazení.</p>
+			{/if}
+		</section>
+
+		<section class="card p-6 rise rise-3">
+			<h2 class="section-title mb-4">Výdaje podle auta</h2>
+			{if $hasCar}
+				<div class="h-72">
+					<canvas data-chart="bar" data-chart-config="car"></canvas>
+				</div>
+				<script type="application/json" id="chart-car">{$carData|noescape}</script>
+				<script type="application/json" id="chart-car-opts">{$carOptions|noescape}</script>
+			{else}
+				<p class="text-sm text-muted py-12 text-center">Žádné výdaje připsané k autům.</p>
+			{/if}
+		</section>
+	</div>
+</div>
+{/block}

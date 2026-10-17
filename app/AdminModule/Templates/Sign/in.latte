@@ -1,0 +1,57 @@
+{block title}Přihlášení do administrace{/block}
+
+{block content}
+<div class="relative min-h-screen overflow-hidden flex flex-col items-center justify-center px-6 py-12 bg-canvas">
+	<div class="absolute -top-48 left-1/2 -translate-x-1/2 w-[46rem] h-[30rem] rounded-full bg-violet-500/15 blur-3xl pointer-events-none"></div>
+	<div class="absolute -bottom-48 -right-24 w-[30rem] h-[30rem] rounded-full bg-sky-400/15 blur-3xl pointer-events-none"></div>
+
+	<div class="relative w-full max-w-sm rise">
+		<div class="flex flex-col items-center text-center mb-8">
+			<div class="relative">
+				{include '../../../Frontend/Templates/@logo.latte', size: 'w-14 h-14'}
+				<span class="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-linear-to-br from-violet-500 to-fuchsia-500 text-white flex items-center justify-center ring-4 ring-[var(--canvas)]"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i></span>
+			</div>
+			<span class="badge badge-accent mt-6">Administrace</span>
+			<h1 class="text-[1.75rem] font-bold tracking-tight mt-3">Správa Základny</h1>
+			<p class="text-muted mt-1">Přístup jen pro administrátory.</p>
+		</div>
+
+		<div class="card p-7" style="box-shadow: var(--shadow-lg)" x-data="{ show: false, busy: false }" @submit="setTimeout(() => busy = !$event.defaultPrevented)">
+			{form signInForm, class: 'space-y-4', novalidate: true}
+				<div n:ifcontent class="rounded-xl px-4 py-3 text-sm bg-neg/10 text-neg flex items-center gap-2">
+					{foreach $form->getOwnErrors() as $error}<i data-lucide="circle-alert" class="w-4 h-4 shrink-0"></i>{$error}{/foreach}
+				</div>
+				<div>
+					<label n:name="email" class="label">E-mail</label>
+					<div class="relative">
+						<i data-lucide="mail" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-faint pointer-events-none"></i>
+						<input n:name="email" class="input pl-10" autocomplete="username" autofocus>
+					</div>
+					<p n:foreach="$form['email']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+				</div>
+				<div>
+					<label n:name="password" class="label">Heslo</label>
+					<div class="relative">
+						<i data-lucide="lock" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-faint pointer-events-none"></i>
+						<input n:name="password" class="input pl-10 pr-11" autocomplete="current-password" :type="show ? 'text' : 'password'">
+						<button type="button" @click="show = !show" class="absolute right-1.5 top-1/2 -translate-y-1/2 btn-icon" title="Zobrazit heslo">
+							<i data-lucide="eye" class="w-4 h-4" x-show="!show"></i>
+							<i data-lucide="eye-off" class="w-4 h-4" x-show="show" x-cloak></i>
+						</button>
+					</div>
+					<p n:foreach="$form['password']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+				</div>
+				<button n:name="send" class="btn btn-primary btn-lg w-full mt-2 disabled:opacity-70" :disabled="busy">
+					<svg x-show="busy" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+					<span x-text="busy ? 'Přihlašuji…' : 'Přihlásit'">Přihlásit</span>
+				</button>
+			{/form}
+		</div>
+
+		<div class="flex items-center justify-between mt-6 text-sm">
+			<a n:href=":Frontend:Home:default" class="text-muted hover:text-ink flex items-center gap-1"><i data-lucide="arrow-left" class="w-4 h-4"></i>Zpět na web</a>
+			<button type="button" onclick="toggleTheme()" class="btn-icon" title="Přepnout režim"><i data-lucide="moon" class="w-4 h-4 dark:hidden!"></i><i data-lucide="sun" class="w-4 h-4 hidden! dark:block!"></i></button>
+		</div>
+	</div>
+</div>
+{/block}

@@ -1,0 +1,276 @@
+{import '../@components.latte'}
+{block title}Přehled{/block}
+
+{* ---------- Widgets (rendered in the user's order by the loop below) ---------- *}
+
+{define w-balance}
+	{var $total = $income + $expense}
+	<div class="flex items-center justify-between">
+		<h2 class="section-title first-letter:uppercase">{$today|czMonth}</h2>
+		<a n:href="Finance:default" class="btn btn-ghost text-sm">Finance <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	<div class="mt-4">
+		<div class="eyebrow">Zůstatek</div>
+		<div n:class="'num text-5xl font-semibold mt-1', $balance >= 0 ? 'text-ink' : 'text-neg'">{$balance > 0 ? '+'}{$balance|czk}</div>
+	</div>
+	<div class="progress mt-6 flex" n:if="$total > 0">
+		<span class="bg-pos" style="width: {round($income / $total * 100)}%"></span>
+		<span class="bg-neg" style="width: {round($expense / $total * 100)}%"></span>
+	</div>
+	<div class="grid grid-cols-2 gap-4 mt-5">
+		<div class="flex items-center gap-3">
+			<span class="tile bg-pos/12 text-pos"><i data-lucide="arrow-down-left"></i></span>
+			<div><div class="eyebrow">Příjmy</div><div class="num font-semibold">{$income|czk}</div></div>
+		</div>
+		<div class="flex items-center gap-3">
+			<span class="tile bg-neg/12 text-neg"><i data-lucide="arrow-up-right"></i></span>
+			<div><div class="eyebrow">Výdaje</div><div class="num font-semibold">{$expense|czk}</div></div>
+		</div>
+	</div>
+{/define}
+
+{define w-budgets}
+	<div class="flex items-center justify-between mb-4">
+		<h2 class="section-title">Rozpočty</h2>
+		<a n:href="Budget:default" class="btn btn-ghost text-sm">Vše <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	{if $budgets}
+		<div class="space-y-4">
+			<div n:foreach="$budgets as $b">
+				{var $over = $b['pct'] > 100}
+				<div class="flex justify-between text-sm mb-1.5">
+					<span class="font-medium truncate">{$b['budget']->category}</span>
+					<span n:class="'num', $over ? 'text-neg' : 'text-muted'">{$b['spent']|number:0,',',' '} / {$b['budget']->monthlyLimit|czk}</span>
+				</div>
+				<div class="progress"><span n:class="$over ? 'bg-neg' : ($b['pct'] > 80 ? 'bg-warn' : 'bg-accent')" style="width: {round(min(100, $b['pct']))}%"></span></div>
+			</div>
+		</div>
+	{else}
+		<div class="text-center py-6">
+			<span class="tile bg-accent/12 text-accent mx-auto"><i data-lucide="piggy-bank"></i></span>
+			<p class="text-sm text-muted mt-3 mb-4">Nastav si měsíční limity a hlídej, kam tečou peníze.</p>
+			<a n:href="Budget:add" class="btn btn-secondary">Vytvořit rozpočet</a>
+		</div>
+	{/if}
+{/define}
+
+{define w-deadlines}
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="section-title">Termíny u aut</h2>
+		<a n:href="Garage:default" class="btn btn-ghost text-sm">Garáž <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	{var $hasDocs = false}
+	<div>
+		{foreach $upcomingDocs as $doc}
+			{var $hasDocs = true}
+			<a n:href="Garage:detail $doc->car->id" class="list-row group">
+				{include docIcon, type: $doc->type}
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium truncate group-hover:text-accent">{App\Model\CarDocument\CarDocument::TYPE_LABELS[$doc->type]}</div>
+					<div class="text-xs text-muted truncate">{$doc->car->name} · {$doc->expiresAt|date:'j. n. Y'}</div>
+				</div>
+				{include daysBadge, days: ($doc->expiresAt|daysUntil)}
+			</a>
+		{/foreach}
+	</div>
+	<p n:if="!$hasDocs" class="text-sm text-muted py-6 text-center">V příštích 60 dnech nic nevyprší.</p>
+{/define}
+
+{define w-cars}
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="section-title">Auta</h2>
+		<a n:href="Garage:add" class="btn btn-ghost text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Přidat</a>
+	</div>
+	{if $carStats}
+		<div>
+			<a n:foreach="$carStats as $cs" n:href="Garage:detail $cs['car']->id" class="list-row group">
+				{if $cs['car']->photo}
+					<img src="{$basePath}/www/upload/{$cs['car']->photo}" alt="" class="w-9 h-9 rounded-[10px] object-cover shrink-0">
+				{else}
+					<span class="tile bg-accent/12 text-accent"><i data-lucide="car"></i></span>
+				{/if}
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium truncate group-hover:text-accent">{$cs['car']->name}</div>
+					<div class="text-xs text-muted">{$cs['car']->licensePlate}</div>
+				</div>
+				<div class="text-right">
+					{if $cs['fuel']['avg'] !== null}
+						<div class="num text-sm font-semibold">{$cs['fuel']['avg']|number:1,',',' '} <span class="text-muted font-normal">l/100</span></div>
+						<div class="num text-xs text-muted">{$cs['fuel']['costPerKm']|number:2,',',' '} Kč/km</div>
+					{else}
+						<div class="text-xs text-faint">bez dat o spotřebě</div>
+					{/if}
+				</div>
+			</a>
+		</div>
+	{else}
+		<p class="text-sm text-muted py-6 text-center">Zatím žádné auto. <a n:href="Garage:add" class="text-accent">Přidej první</a>.</p>
+	{/if}
+{/define}
+
+{define w-events}
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="section-title">Příštích 7 dní</h2>
+		<a n:href="Calendar:default" class="btn btn-ghost text-sm">Kalendář <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	{var $hasEvents = false}
+	<div>
+		{foreach $upcomingEvents as $event}
+			{var $hasEvents = true}
+			{var $isToday = ($event->date|daysUntil) === 0}
+			<a n:href="Calendar:edit $event->id" class="list-row group">
+				<span n:class="'tile flex-col leading-none', $isToday ? 'bg-accent text-white' : 'bg-surface-2'">
+					<span class="text-[9px] uppercase font-semibold opacity-70">{$event->date|czShortDate|substr:0,2}</span>
+					<span class="text-sm font-semibold">{$event->date|date:'j'}</span>
+				</span>
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium truncate group-hover:text-accent">{$event->title}</div>
+					<div n:ifset="$event->description" class="text-xs text-muted truncate">{$event->description}</div>
+				</div>
+			</a>
+		{/foreach}
+	</div>
+	<p n:if="!$hasEvents" class="text-sm text-muted py-6 text-center">Volný týden.</p>
+{/define}
+
+{define w-goals}
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="section-title">Spořicí cíle</h2>
+		<a n:href="Goal:default" class="btn btn-ghost text-sm">Vše <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	{if $goals}
+		<div class="space-y-4 mt-3">
+			<a n:foreach="$goals as $g" n:href="Goal:default" class="block group">
+				{var $pct = min(100, $g->saved / $g->targetAmount * 100)}
+				<div class="flex justify-between text-sm mb-1.5">
+					<span class="font-medium truncate group-hover:text-accent">{$g->name}</span>
+					<span class="num text-muted">{round($pct)} %</span>
+				</div>
+				<div class="progress"><span class="bg-accent" style="width: {round($pct)}%"></span></div>
+				<div class="num text-xs text-muted mt-1">{$g->saved|czk} z {$g->targetAmount|czk}{if $g->household} · domácnost{/if}</div>
+			</a>
+		</div>
+	{else}
+		<div class="text-center py-6">
+			<span class="tile bg-accent/12 text-accent mx-auto"><i data-lucide="target"></i></span>
+			<p class="text-sm text-muted mt-3 mb-4">Na co si šetříš? Nastav cíl a sleduj pokrok.</p>
+			<a n:href="Goal:add" class="btn btn-secondary">Nový cíl</a>
+		</div>
+	{/if}
+{/define}
+
+{define w-household}
+	<div class="flex items-center justify-between mb-2">
+		<h2 class="section-title">{$household ? $household->name : 'Domácnost'}</h2>
+		<a n:href="Household:default" class="btn btn-ghost text-sm">Otevřít <i data-lucide="chevron-right" class="w-4 h-4"></i></a>
+	</div>
+	{if $household}
+		<div class="grid grid-cols-2 gap-3 mt-3">
+			<div class="rounded-2xl bg-surface-2 p-4">
+				<div class="eyebrow">Tvoje bilance</div>
+				<div n:class="'num text-xl font-semibold mt-1', $hhBalance > 0 ? 'text-pos' : ($hhBalance < 0 ? 'text-neg')">{$hhBalance > 0 ? '+'}{$hhBalance|czk}</div>
+				<div class="text-xs text-muted mt-0.5">{$hhBalance > 0 ? 'ostatní ti dluží' : ($hhBalance < 0 ? 'dlužíš ostatním' : 'vyrovnáno')}</div>
+			</div>
+			<a n:href="Household:lists" class="rounded-2xl bg-surface-2 p-4 hover:bg-line transition">
+				<div class="eyebrow">Nákupní seznam</div>
+				<div class="num text-xl font-semibold mt-1">{$hhShoppingCount}</div>
+				<div class="text-xs text-muted mt-0.5">položek ke koupi</div>
+			</a>
+		</div>
+		{var $anyTask = false}
+		{foreach $hhTasks as $t}
+			{if !$anyTask}<div class="eyebrow mt-4 mb-1">Úkoly</div>{var $anyTask = true}{/if}
+			<div class="list-row py-2!">
+				<span class="w-4 h-4 rounded-full border-2 border-faint shrink-0"></span>
+				<span class="text-sm flex-1 truncate">{$t->title}</span>
+				<span n:if="$t->assignee" class="text-xs text-muted">{$t->assignee->name}</span>
+			</div>
+		{/foreach}
+	{else}
+		<div class="text-center py-6">
+			<span class="tile bg-linear-to-br from-amber-400 to-orange-500 text-white mx-auto"><i data-lucide="house-plus"></i></span>
+			<p class="text-sm text-muted mt-3 mb-4">Bydlíš s někým? Sdílejte výdaje, nákupy a úkoly.</p>
+			<a n:href="Household:default" class="btn btn-secondary">Založit domácnost</a>
+		</div>
+	{/if}
+{/define}
+
+{define w-services}
+	<h2 class="section-title mb-2">Poslední servis</h2>
+	{var $hasServices = false}
+	<div class="grid sm:grid-cols-3 gap-x-6">
+		{foreach $recentServices as $sr}
+			{var $hasServices = true}
+			<a n:href="Garage:detail $sr->car->id" class="flex items-center gap-3 py-3 group">
+				<span class="tile bg-orange-500/12 text-orange-500"><i data-lucide="wrench"></i></span>
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-medium truncate group-hover:text-accent">{$sr->description}</div>
+					<div class="text-xs text-muted truncate">{$sr->car->name} · {$sr->date|date:'j. n. Y'} · <span class="num">{$sr->cost|czk}</span></div>
+				</div>
+			</a>
+		{/foreach}
+	</div>
+	<p n:if="!$hasServices" class="text-sm text-muted py-4">Zatím žádné servisní záznamy.</p>
+{/define}
+
+{* ---------- Page ---------- *}
+
+{block content}
+{var $firstName = explode(' ', $currentUser->name)[0]}
+
+<div x-data="dashboardEditor" data-layout="{json_encode($layout)}" data-save-url="{link saveLayout!}">
+	<header class="flex flex-wrap items-end justify-between gap-4 mb-8 rise">
+		<div>
+			<div class="eyebrow first-letter:uppercase">{$today|czLongDate}</div>
+			<h1 class="page-title mt-1">{$greeting}, {$firstName}</h1>
+		</div>
+		<div class="flex flex-wrap gap-2" x-show="!editing">
+			<a n:href="Finance:add" class="btn btn-secondary"><i data-lucide="arrow-up-right" class="w-4 h-4"></i>Výdaj</a>
+			{foreach $carStats as $cs}
+				{breakIf $iterator->counter > 2}
+				<a n:href="Fuel:add $cs['car']->id" class="btn btn-secondary"><i data-lucide="fuel" class="w-4 h-4"></i>{count($carStats) > 1 ? $cs['car']->name : 'Tankovat'}</a>
+			{/foreach}
+			<button type="button" @click="start()" class="btn btn-secondary" title="Upravit přehled"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i><span class="hidden sm:inline">Upravit</span></button>
+		</div>
+		<div class="flex flex-wrap gap-2" x-show="editing" x-cloak>
+			<a n:href="resetLayout!" data-confirm="Vrátit přehled do výchozího stavu?" class="btn btn-ghost"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>Výchozí</a>
+			<button type="button" @click="cancel()" class="btn btn-secondary">Zrušit</button>
+			<button type="button" @click="save()" class="btn btn-primary" :disabled="saving"><i data-lucide="check" class="w-4 h-4"></i>Hotovo</button>
+		</div>
+	</header>
+
+	<div x-show="editing" x-cloak x-transition class="mb-6 rounded-2xl bg-accent/10 text-accent px-4 py-3 text-sm flex items-center gap-2">
+		<i data-lucide="grip-vertical" class="w-4 h-4 shrink-0"></i>
+		Bloky přetáhni na nové místo. U každého změníš šířku (1–3) nebo ho skryješ.
+	</div>
+
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+		{foreach $layout as $i => $w}
+			<section data-key="{$w['k']}" {if $w['h']}x-cloak{/if}
+				class="card p-6 relative rise lg:[grid-column:span_var(--span)]"
+				style="--span: {$w['w']}; animation-delay: {min($i, 6) * 50}ms"
+				:class="classes($el.dataset.key)" :style="{ order: pos($el.dataset.key), '--span': width($el.dataset.key) }"
+				:draggable="editing" @dragstart="dragStart($event, $el.dataset.key)" @dragover.prevent="dragOver($el.dataset.key)" @dragend="dragKey = null">
+
+				{* Edit toolbar *}
+				<div x-show="editing" x-cloak class="absolute -top-3.5 right-4 z-10 flex items-center gap-1 rounded-full bg-surface shadow-lg ring-1 ring-line px-1.5 py-1">
+					<span class="btn-icon w-7! h-7! cursor-grab" title="Přetáhnout"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+					<div class="segmented p-0.5! hidden lg:inline-flex">
+						<button type="button" @click="setWidth($el.closest('[data-key]').dataset.key, 1)" :class="width($el.closest('[data-key]').dataset.key) === 1 && 'on'" class="px-2! py-0.5! text-xs!">1</button>
+						<button type="button" @click="setWidth($el.closest('[data-key]').dataset.key, 2)" :class="width($el.closest('[data-key]').dataset.key) === 2 && 'on'" class="px-2! py-0.5! text-xs!">2</button>
+						<button type="button" @click="setWidth($el.closest('[data-key]').dataset.key, 3)" :class="width($el.closest('[data-key]').dataset.key) === 3 && 'on'" class="px-2! py-0.5! text-xs!">3</button>
+					</div>
+					<button type="button" @click="toggle($el.closest('[data-key]').dataset.key)" class="btn-icon w-7! h-7!" title="Skrýt / zobrazit">
+						<i data-lucide="eye" class="w-4 h-4"></i>
+					</button>
+				</div>
+				<div x-show="editing && hidden($el.closest('[data-key]').dataset.key)" x-cloak class="absolute inset-0 z-[5] rounded-[1.25rem] bg-canvas/70 backdrop-blur-[2px] flex items-center justify-center">
+					<button type="button" @click="toggle($el.closest('[data-key]').dataset.key)" class="btn btn-secondary"><i data-lucide="eye-off" class="w-4 h-4"></i>Skryto · zobrazit</button>
+				</div>
+
+				{include block "w-{$w['k']}"}
+			</section>
+		{/foreach}
+	</div>
+</div>
+{/block}

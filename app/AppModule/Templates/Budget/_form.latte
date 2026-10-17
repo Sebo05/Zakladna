@@ -1,0 +1,8 @@
+{import '../@components.latte'}
+{form budgetForm, class: 'space-y-5'}
+	{include formErrors, form: $form}
+	{include field, form: $form, name: 'category', hint: 'Musí odpovídat kategorii u transakcí, např. „Jídlo“.'}
+	{include field, form: $form, name: 'monthlyLimit'}
+	<datalist id="categories"><option n:foreach="$categories as $c" value="{$c}"></option></datalist>
+	<div class="pt-2">{input send, class: 'btn btn-primary btn-lg'}</div>
+{/form}

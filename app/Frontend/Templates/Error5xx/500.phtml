@@ -1,0 +1,47 @@
+<!DOCTYPE html><!-- "' --></textarea></script></style></pre></xmp></a></audio></button></canvas></datalist></details></dialog></iframe></listing></meter></noembed></noframes></noscript></optgroup></option></progress></rp></select></table></template></title></video>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Chyba serveru · Základna</title>
+
+<?php /* Standalone on purpose: rendered after an uncaught error, possibly over partial output, so no layout/assets. */ ?>
+<style>
+	#zk-error { all: initial; position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 24px;
+		background: #f5f5f7; color: #1d1d1f; font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+	#zk-error * { box-sizing: border-box; }
+	#zk-error .box { max-width: 460px; text-align: center; }
+	#zk-error .logo { width: 44px; height: 44px; margin: 0 auto 40px; border-radius: 28%; background: linear-gradient(135deg, #38bdf8, #3b82f6 50%, #4f46e5); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgb(59 130 246 / .3); }
+	#zk-error .code { font-size: 112px; line-height: 1; font-weight: 700; letter-spacing: -.06em; background: linear-gradient(#1d1d1f, rgb(29 29 31 / .25)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+	#zk-error h1 { font-size: 30px; line-height: 1.2; font-weight: 700; letter-spacing: -.02em; margin: 20px 0 10px; }
+	#zk-error p { color: #6e6e73; font-size: 17px; margin: 0; }
+	#zk-error .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+	#zk-error a, #zk-error button { all: unset; cursor: pointer; padding: 12px 24px; border-radius: 999px; font-weight: 500; font-size: 15px; }
+	#zk-error .primary { background: #0071e3; color: #fff; }
+	#zk-error .secondary { background: #e8e8ed; color: #1d1d1f; }
+	#zk-error small { display: block; margin-top: 40px; font-size: 12px; color: #a1a1a6; }
+	@media (prefers-color-scheme: dark) {
+		#zk-error { background: #000; color: #f5f5f7; }
+		#zk-error .code { background-image: linear-gradient(#f5f5f7, rgb(245 245 247 / .2)); }
+		#zk-error p { color: #98989d; }
+		#zk-error .primary { background: #0a84ff; }
+		#zk-error .secondary { background: #2c2c2e; color: #f5f5f7; }
+	}
+</style>
+
+<div id="zk-error">
+	<div class="box">
+		<div class="logo"><svg viewBox="0 0 24 24" width="26" height="26" fill="#fff" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2" opacity=".55"/><rect x="3" y="13" width="8" height="8" rx="2.2" opacity=".55"/><rect x="13" y="13" width="8" height="8" rx="4"/></svg></div>
+		<div class="code">500</div>
+		<h1>Něco se pokazilo</h1>
+		<p>Na serveru nastala chyba. Už o ní víme a koukneme na ni. Zkus to prosím za chvíli znovu.</p>
+		<div class="actions">
+			<button class="primary" onclick="location.reload()">Zkusit znovu</button>
+			<a class="secondary" href="/">Domů</a>
+		</div>
+		<small>Chyba 500</small>
+	</div>
+</div>
+
+<script>
+	document.body.insertBefore(document.getElementById('zk-error'), document.body.firstChild);
+</script>

@@ -1,0 +1,77 @@
+{import '../@components.latte'}
+{block title}Finance{/block}
+
+{block content}
+<header class="flex flex-wrap items-end justify-between gap-4 mb-8 rise">
+	<div>
+		<h1 class="page-title">Finance</h1>
+		<div class="flex items-center gap-1 mt-2">
+			<a n:href="default, month: $prevMonth" class="btn-icon" title="Předchozí měsíc"><i data-lucide="chevron-left" class="w-5 h-5"></i></a>
+			<span class="text-[15px] font-medium min-w-32 text-center first-letter:uppercase">{$monthStart|czMonth} {$monthStart|date:'Y'}</span>
+			<a n:href="default, month: $nextMonth" class="btn-icon" title="Další měsíc"><i data-lucide="chevron-right" class="w-5 h-5"></i></a>
+		</div>
+	</div>
+	<div class="flex gap-2">
+		<a n:href="add, type: 'income'" class="btn btn-secondary"><i data-lucide="arrow-down-left" class="w-4 h-4"></i>Příjem</a>
+		<a n:href="add" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Výdaj</a>
+	</div>
+</header>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 rise rise-2">
+	<div class="card p-5 flex items-center gap-4">
+		<span class="tile bg-pos/12 text-pos w-11 h-11 rounded-xl"><i data-lucide="arrow-down-left"></i></span>
+		<div><div class="eyebrow">Příjmy</div><div class="num text-xl font-semibold">{$income|czk}</div></div>
+	</div>
+	<div class="card p-5 flex items-center gap-4">
+		<span class="tile bg-neg/12 text-neg w-11 h-11 rounded-xl"><i data-lucide="arrow-up-right"></i></span>
+		<div><div class="eyebrow">Výdaje</div><div class="num text-xl font-semibold">{$expense|czk}</div></div>
+	</div>
+	<div class="card p-5 flex items-center gap-4">
+		<span class="tile bg-accent/12 text-accent w-11 h-11 rounded-xl"><i data-lucide="wallet"></i></span>
+		<div><div class="eyebrow">Bilance</div><div n:class="'num text-xl font-semibold', $balance < 0 ? 'text-neg'">{$balance > 0 ? '+'}{$balance|czk}</div></div>
+	</div>
+</div>
+
+{* Category filter chips *}
+<div class="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 rise rise-3" n:if="$categories">
+	<a n:href="default, category: null" n:class="'badge text-sm! px-3! py-1.5! shrink-0', !$selectedCategory ? 'bg-ink! text-canvas!' : 'badge-muted'">Vše</a>
+	<a n:foreach="$categories as $c" n:href="default, category: $c" n:class="'badge text-sm! px-3! py-1.5! shrink-0', $selectedCategory === $c ? 'bg-ink! text-canvas!' : 'badge-muted'">{$c}</a>
+</div>
+
+{* Transactions grouped by day *}
+{var $lastDay = null}
+{var $any = false}
+<div class="card px-4 sm:px-6 py-2 rise rise-3">
+	{foreach $transactions as $t}
+		{var $any = true}
+		{var $day = $t->date->format('Y-m-d')}
+		{if $day !== $lastDay}
+			<div n:class="'text-xs font-medium text-muted pt-4 pb-1 first-letter:uppercase', $lastDay !== null ? 'border-t border-line mt-2'">{$t->date|czLongDate}</div>
+			{var $lastDay = $day}
+		{/if}
+		<div class="flex items-center gap-3 py-2.5 group">
+			<span n:class="'tile', $t->type === 'income' ? 'bg-pos/12 text-pos' : 'bg-surface-2 text-muted'">
+				<i data-lucide="{$t->category === 'Palivo' ? 'fuel' : ($t->type === 'income' ? 'arrow-down-left' : 'receipt')}"></i>
+			</span>
+			<div class="flex-1 min-w-0">
+				<div class="text-sm font-medium truncate">{$t->description}</div>
+				<div class="text-xs text-muted truncate">
+					{$t->category}
+					{if $t->car !== null} · {$t->car->name}
+					{elseif $t->carName !== null} · <span class="line-through" title="Auto bylo smazáno">{$t->carName}</span>
+					{/if}
+				</div>
+			</div>
+			<div n:class="'num text-sm font-semibold whitespace-nowrap', $t->type === 'income' ? 'text-pos'">{$t->type === 'income' ? '+' : '−'}{$t->amount|czk}</div>
+			<div class="flex sm:opacity-0 group-hover:opacity-100 transition">
+				<a n:href="edit $t->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+				<a n:href="delete $t->id" data-confirm="Smazat tuto transakci?" class="btn-icon danger hidden sm:inline-flex" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+			</div>
+		</div>
+	{/foreach}
+	<div n:if="!$any" class="py-12 text-center">
+		<p class="text-muted">V tomto měsíci žádné transakce.</p>
+		<a n:href="add" class="btn btn-secondary mt-4">Přidat výdaj</a>
+	</div>
+</div>
+{/block}

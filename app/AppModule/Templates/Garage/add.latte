@@ -1,0 +1,6 @@
+{import '../@components.latte'}
+{block title}Nové auto{/block}
+{block content}
+{include formHeader, title: 'Nové auto', back: $presenter->link('default'), backLabel: 'Garáž'}
+<div class="max-w-5xl">{include _carForm.latte, cancelUrl: $presenter->link('default')}</div>
+{/block}

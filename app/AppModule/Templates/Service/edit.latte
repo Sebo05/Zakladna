@@ -1,0 +1,6 @@
+{import '../@components.latte'}
+{block title}Upravit servis{/block}
+{block content}
+{include formHeader, title: 'Upravit servis', back: $presenter->link('Garage:detail', $car->id), backLabel: $car->name}
+<div class="card p-6 sm:p-8 max-w-2xl rise rise-2">{include _form.latte}</div>
+{/block}

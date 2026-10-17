@@ -1,0 +1,25 @@
+{block title}Menu{/block}
+
+{block content}
+<header class="flex flex-wrap items-end justify-between gap-4 mb-6 rise">
+	<div>
+		<div class="eyebrow">Obsah webu</div>
+		<h1 class="page-title mt-1">Menu</h1>
+	</div>
+	<a n:href="add" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Nová položka</a>
+</header>
+
+<div class="card p-2 sm:p-4 rise rise-2">
+	<div n:foreach="$items as $item" class="list-row px-3">
+		<span class="w-8 text-center num text-sm text-muted">{$item->position}</span>
+		<div class="flex-1 min-w-0">
+			<a n:href="edit $item->id" class="block text-sm font-medium truncate hover:text-accent">{$item->label}</a>
+			<div class="text-xs text-muted font-mono truncate">{$item->url}</div>
+		</div>
+		<span n:class="'badge', $item->visible ? 'badge-accent'">{$item->visible ? 'Viditelná' : 'Skrytá'}</span>
+		<a n:href="edit $item->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+		<a n:href="delete $item->id" class="btn-icon hover:text-neg" title="Smazat" data-confirm="Smazat položku {$item->label}?"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+	</div>
+	<p n:if="!$items->countStored()" class="text-sm text-muted text-center py-10">Žádné položky.</p>
+</div>
+{/block}

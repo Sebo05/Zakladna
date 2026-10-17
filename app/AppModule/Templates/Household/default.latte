@@ -1,0 +1,112 @@
+{import '../@components.latte'}
+{block title}Domácnost{/block}
+
+{block content}
+{if !$household}
+	{* ---------- No household: create or join ---------- *}
+	<header class="mb-8 rise">
+		<h1 class="page-title">Domácnost</h1>
+		<p class="page-sub">Sdílejte výdaje, nákupy, úkoly a společné cíle s lidmi, se kterými bydlíte.</p>
+	</header>
+	<div class="grid md:grid-cols-2 gap-5">
+		<div class="card p-7 rise rise-2">
+			<span class="tile bg-linear-to-br from-amber-400 to-orange-500 text-white w-12 h-12 rounded-2xl"><i data-lucide="house"></i></span>
+			<h2 class="text-xl font-semibold tracking-tight mt-5">Založit domácnost</h2>
+			<p class="text-sm text-muted mt-1 mb-5">Pak pošleš ostatním kód nebo odkaz.</p>
+			{form createForm, class: 'space-y-4'}
+				{include formErrors, form: $form}
+				{include field, form: $form, name: 'name'}
+				{input send, class: 'btn btn-primary w-full'}
+			{/form}
+		</div>
+		<div class="card p-7 rise rise-3">
+			<span class="tile bg-accent/12 text-accent w-12 h-12 rounded-2xl"><i data-lucide="user"></i></span>
+			<h2 class="text-xl font-semibold tracking-tight mt-5">Mám pozvánku</h2>
+			<p class="text-sm text-muted mt-1 mb-5">Zadej šestimístný kód, který ti někdo poslal.</p>
+			{form joinForm, class: 'space-y-4'}
+				{include formErrors, form: $form}
+				{include field, form: $form, name: 'code'}
+				{input send, class: 'btn btn-secondary w-full'}
+			{/form}
+		</div>
+	</div>
+	<div class="grid sm:grid-cols-3 gap-5 mt-5 rise rise-4">
+		<div class="card p-5"><i data-lucide="receipt" class="w-5 h-5 text-accent"></i><div class="font-medium mt-3">Kdo komu dluží</div><p class="text-sm text-muted mt-1">Zapiš, kdo co zaplatil, a Základna spočítá vyrovnání.</p></div>
+		<div class="card p-5"><i data-lucide="check" class="w-5 h-5 text-pos"></i><div class="font-medium mt-3">Úkoly a nákupy</div><p class="text-sm text-muted mt-1">Společný seznam, odškrtáváte všichni.</p></div>
+		<div class="card p-5"><i data-lucide="target" class="w-5 h-5 text-warn"></i><div class="font-medium mt-3">Společné cíle</div><p class="text-sm text-muted mt-1">Spořte na dovolenou nebo gauč dohromady.</p></div>
+	</div>
+{else}
+	{include '@nav.latte'}
+
+	<div class="grid lg:grid-cols-3 gap-5">
+		{* Balances *}
+		<section class="card p-6 lg:col-span-2 rise rise-2">
+			<h2 class="section-title mb-4">Kdo komu dluží</h2>
+			{if $payments}
+				<div class="space-y-3">
+					<div n:foreach="$payments as $p" class="flex flex-wrap items-center gap-3 rounded-2xl bg-surface-2 p-4">
+						<span class="font-medium">{$memberMap[$p['from']]->name}</span>
+						<i data-lucide="arrow-right" class="w-4 h-4 text-muted"></i>
+						<span class="font-medium">{$memberMap[$p['to']]->name}</span>
+						<span class="num font-semibold text-lg ml-auto">{$p['amount']|czk}</span>
+						<a n:if="$me->id === $p['from'] || $me->id === $p['to']" n:href="settle!, from: $p['from'], to: $p['to'], amount: $p['amount']"
+							data-confirm="Zaznamenat, že {$memberMap[$p['from']]->name} poslal(a) {$p['amount']|czk}?" class="btn btn-primary">
+							<i data-lucide="check" class="w-4 h-4"></i>Vyrovnáno
+						</a>
+					</div>
+				</div>
+			{else}
+				<div class="flex items-center gap-3 rounded-2xl bg-pos/10 text-pos p-4 font-medium"><i data-lucide="check" class="w-5 h-5"></i>Všichni jsou vyrovnaní.</div>
+			{/if}
+			<div class="grid sm:grid-cols-2 gap-x-6 mt-5">
+				<div n:foreach="$members as $m" class="list-row">
+					<span class="w-8 h-8 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$m->name|substr:0,1|upper}</span>
+					<span class="flex-1 text-sm font-medium truncate">{$m->name}{if $m->id === $me->id} <span class="text-muted font-normal">(ty)</span>{/if}</span>
+					{var $b = $balances[$m->id] ?? 0}
+					<span n:class="'num text-sm font-semibold', $b > 0 ? 'text-pos' : ($b < 0 ? 'text-neg' : 'text-muted')">{$b > 0 ? '+'}{$b|czk}</span>
+				</div>
+			</div>
+		</section>
+
+		{* Invite + quick stats *}
+		<div class="space-y-5">
+			<section class="card p-6 rise rise-3" x-data="{ copied: false }">
+				<h2 class="section-title">Pozvat členy</h2>
+				<p class="text-sm text-muted mt-1">Pošli kód nebo odkaz.</p>
+				<div class="num font-mono text-3xl font-semibold tracking-[0.3em] text-center my-4 py-3 rounded-2xl bg-surface-2">{$household->inviteCode}</div>
+				<button type="button" class="btn btn-secondary w-full" data-url="{$inviteUrl}" @click="copyText($el.dataset.url); copied = true; setTimeout(() => copied = false, 2000)">
+					<i data-lucide="link" class="w-4 h-4"></i><span x-text="copied ? 'Zkopírováno!' : 'Kopírovat odkaz'">Kopírovat odkaz</span>
+				</button>
+			</section>
+			<div class="grid grid-cols-3 gap-3 rise rise-4">
+				<a n:href="expenses" class="card card-hover p-4 text-center"><div class="num font-semibold">{$monthSpent|number:0,',',' '}</div><div class="text-xs text-muted mt-0.5">Kč tento měsíc</div></a>
+				<a n:href="lists" class="card card-hover p-4 text-center"><div class="num font-semibold">{$openTasks}</div><div class="text-xs text-muted mt-0.5">úkolů</div></a>
+				<a n:href="lists" class="card card-hover p-4 text-center"><div class="num font-semibold">{$openShopping}</div><div class="text-xs text-muted mt-0.5">k nákupu</div></a>
+			</div>
+		</div>
+
+		{* Recent expenses *}
+		<section class="card p-6 lg:col-span-3 rise rise-4">
+			<div class="flex justify-between items-center mb-2">
+				<h2 class="section-title">Poslední společné výdaje</h2>
+				<a n:href="expenses" class="btn btn-ghost text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Přidat výdaj</a>
+			</div>
+			{var $any = false}
+			<div>
+				{foreach $recentExpenses as $e}
+					{var $any = true}
+					<div class="list-row">
+						<span class="tile bg-surface-2 text-muted"><i data-lucide="receipt"></i></span>
+						<div class="flex-1 min-w-0">
+							<div class="text-sm font-medium truncate">{$e->description}</div>
+							<div class="text-xs text-muted">{$e->paidBy->name} · {$e->date|date:'j. n.'} · {$e->category}</div>
+						</div>
+						<div class="num text-sm font-semibold">{$e->amount|czk}</div>
+					</div>
+				{/foreach}
+			</div>
+			<p n:if="!$any" class="text-sm text-muted py-6 text-center">Zatím žádné společné výdaje.</p>
+		</section>
+	</div>
+{/if}
+{/block}

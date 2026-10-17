@@ -1,0 +1,35 @@
+{block title}{$household->name}{/block}
+
+{block content}
+<a n:href="default" class="btn btn-ghost -ml-3 mb-3 text-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i>Domácnosti</a>
+<header class="flex flex-wrap items-end justify-between gap-4 mb-6 rise">
+	<div>
+		<h1 class="page-title">{$household->name}</h1>
+		<p class="page-sub">Založena {$household->created_at|date:'j. n. Y'}{if $household->last_activity} · poslední aktivita {$household->last_activity|date:'j. n. Y'}{/if}</p>
+	</div>
+	<span class="badge"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Jen počty, bez částek a obsahu</span>
+</header>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 rise rise-2">
+	{foreach [['Členové', 'user', $household->members], ['Společné výdaje', 'receipt', $household->expenses], ['Vyrovnání', 'refresh-cw', $household->settlements], ['Úkoly', 'list-checks', $household->tasks], ['Nákupy', 'shopping-cart', $household->shopping], ['Cíle a rozpočty', 'target', $household->goals + $household->budgets]] as [$label, $icon, $n]}
+		<div class="card p-4 text-center">
+			<i data-lucide="{$icon}" class="w-5 h-5 mx-auto text-muted"></i>
+			<div class="num text-2xl font-semibold mt-2">{$n}</div>
+			<div class="text-xs text-muted">{$label}</div>
+		</div>
+	{/foreach}
+</div>
+
+<section class="card p-5 sm:p-6 max-w-3xl rise rise-3">
+	<h2 class="section-title mb-2">Členové</h2>
+	<a n:foreach="$members as $m" n:href="Users:userDetail $m->id" class="list-row group">
+		<span class="w-9 h-9 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$m->name|substr:0,1|upper}</span>
+		<div class="flex-1 min-w-0">
+			<div class="text-sm font-medium truncate group-hover:text-accent">{$m->name} <span n:if="$m->id === $household->owner_id" class="badge badge-accent ml-1">správce</span></div>
+			<div class="text-xs text-muted truncate">{$m->email}</div>
+		</div>
+		<span class="text-xs text-muted whitespace-nowrap text-right">{$m->expenses} výdajů<br>{$m->items} položek</span>
+	</a>
+	<p n:if="!$members" class="text-sm text-muted py-4">Domácnost nemá členy.</p>
+</section>
+{/block}

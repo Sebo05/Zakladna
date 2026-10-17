@@ -1,0 +1,15 @@
+{form pageForm, class: 'space-y-5'}
+	<div class="grid sm:grid-cols-2 gap-4">
+		<div>{label title, class: 'label'/}{input title, class: 'input'}<p n:foreach="$form['title']->getErrors() as $e" class="form-error mt-1.5">{$e}</p></div>
+		<div>{label slug, class: 'label'/}{input slug, class: 'input font-mono text-sm'}<p n:foreach="$form['slug']->getErrors() as $e" class="form-error mt-1.5">{$e}</p></div>
+	</div>
+	<div>
+		{label content, class: 'label'/}
+		{input content, class: 'tinymce input'}
+	</div>
+	<label class="flex items-center gap-2 text-sm">{input visible} <span>Viditelná na webu</span></label>
+	<div class="flex gap-3">
+		{input send, class: 'btn btn-primary'}
+		<a n:href="default" class="btn btn-secondary">Zrušit</a>
+	</div>
+{/form}
