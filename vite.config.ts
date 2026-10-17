@@ -3,9 +3,10 @@ import nette from '@nette/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+	root: 'www/Frontend',
 	plugins: [
 		nette({
-			entry: ['main.js', 'main.css'],
+			entry: ['js/main.js', 'css/main.css'],
 		}),
 		tailwindcss(),
 	],

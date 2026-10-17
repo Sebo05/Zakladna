@@ -1,5 +1,5 @@
 // Core bundle — loads on every page
-import './main.css';
+import '../css/main.css';
 import netteForms from 'nette-forms';
 import Alpine from 'alpinejs';
 import {
