@@ -1,0 +1,164 @@
+{import '../@components.latte'}
+{block title}{$car->name}{/block}
+
+{block content}
+<header class="mb-8 rise">
+	<a n:href="default" class="inline-flex items-center gap-1 text-sm text-accent hover:underline mb-3"><i data-lucide="chevron-left" class="w-4 h-4"></i>Garáž</a>
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<div class="flex items-center gap-4 min-w-0">
+			{if $car->photo}
+				<img src="{$basePath}/www/upload/{$car->photo}" alt="" class="w-16 h-16 rounded-2xl object-cover shrink-0">
+			{else}
+				<span class="tile bg-accent/12 text-accent w-16 h-16 rounded-2xl"><i data-lucide="car" class="w-8! h-8!"></i></span>
+			{/if}
+			<div class="min-w-0">
+				<h1 class="page-title truncate">{$car->name}</h1>
+				<p class="page-sub"><span class="font-mono">{$car->licensePlate}</span> · {$car->year} · pořízeno za {$car->purchasePrice|czk}</p>
+				{if $car->vin}{var $vinInfo = App\Model\Car\Vin::decode($car->vin)}
+				<p class="text-xs text-muted mt-1">VIN <button type="button" class="font-mono tracking-wider hover:text-ink" title="Zkopírovat" data-vin="{$car->vin}" onclick="window.copyText(this.dataset.vin)">{$car->vin}</button>
+					<span n:if="$vinInfo['brand']"> · {$vinInfo['brand']}</span><span n:if="$vinInfo['year']" title="Odhad z 10. znaku VIN, ne všechny značky ho používají"> · modelový rok {$vinInfo['year']}</span></p>
+				{/if}
+			</div>
+		</div>
+		<div class="flex flex-wrap gap-2">
+			<a n:href="Fuel:add $car->id" class="btn btn-primary"><i data-lucide="fuel" class="w-4 h-4"></i>Tankovat</a>
+			<a n:href="Service:add $car->id" class="btn btn-secondary"><i data-lucide="wrench" class="w-4 h-4"></i>Servis</a>
+			<a n:href="edit $car->id" class="btn btn-secondary"><i data-lucide="pencil" class="w-4 h-4"></i>Upravit</a>
+		</div>
+	</div>
+</header>
+
+{* Fuel stats *}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5 rise rise-2">
+	<div class="card p-5">
+		<div class="eyebrow flex items-center gap-1.5"><i data-lucide="droplet" class="w-3.5 h-3.5"></i>Průměrná spotřeba</div>
+		<div class="num text-2xl font-semibold mt-2">{if $fuelStats['avg'] !== null}{$fuelStats['avg']|number:1,',',' '} <span class="text-base text-muted font-normal">l/100 km</span>{else}<span class="text-faint">—</span>{/if}</div>
+	</div>
+	<div class="card p-5">
+		<div class="eyebrow flex items-center gap-1.5"><i data-lucide="banknote" class="w-3.5 h-3.5"></i>Palivo na km</div>
+		<div class="num text-2xl font-semibold mt-2">{if $fuelStats['costPerKm'] !== null}{$fuelStats['costPerKm']|number:2,',',' '} <span class="text-base text-muted font-normal">Kč</span>{else}<span class="text-faint">—</span>{/if}</div>
+	</div>
+	<div class="card p-5">
+		<div class="eyebrow flex items-center gap-1.5"><i data-lucide="route" class="w-3.5 h-3.5"></i>Najeto (evidováno)</div>
+		<div class="num text-2xl font-semibold mt-2">{$fuelStats['km']|number:0,',',' '} <span class="text-base text-muted font-normal">km</span></div>
+	</div>
+	<div class="card p-5">
+		<div class="eyebrow flex items-center gap-1.5"><i data-lucide="fuel" class="w-3.5 h-3.5"></i>Utraceno za palivo</div>
+		<div class="num text-2xl font-semibold mt-2">{$fuelStats['spent']|czk}</div>
+	</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+	{* Documents *}
+	<section class="card p-6 rise rise-3">
+		<div class="flex justify-between items-center mb-2">
+			<h2 class="section-title">Dokumenty</h2>
+			<a n:href="addDocument $car->id" class="btn btn-ghost text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Přidat</a>
+		</div>
+		{var $hasDocs = false}
+		<div>
+			{foreach $documents as $doc}
+				{var $hasDocs = true}
+				<div class="list-row group">
+					{include docIcon, type: $doc->type}
+					<div class="flex-1 min-w-0">
+						<div class="text-sm font-medium">{$docTypeLabels[$doc->type]}</div>
+						<div class="text-xs text-muted truncate">do {$doc->expiresAt|date:'j. n. Y'}{ifset $doc->note} · {$doc->note}{/ifset}</div>
+					</div>
+					{include daysBadge, days: ($doc->expiresAt|daysUntil)}
+					<div class="flex opacity-0 group-hover:opacity-100 transition">
+						<a n:href="editDocument $doc->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+						<a n:href="deleteDocument $doc->id" data-confirm="Smazat dokument?" class="btn-icon danger" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+					</div>
+				</div>
+			{/foreach}
+		</div>
+		<p n:if="!$hasDocs" class="text-sm text-muted py-6 text-center">STK, pojištění a známku přidáš tlačítkem nahoře.</p>
+	</section>
+
+	{* Service *}
+	<section class="card p-6 rise rise-3">
+		<div class="flex justify-between items-center mb-2">
+			<h2 class="section-title">Servisní historie</h2>
+			<a n:href="Service:add $car->id" class="btn btn-ghost text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Přidat</a>
+		</div>
+		{var $hasServices = false}
+		<div>
+			{foreach $services as $sr}
+				{var $hasServices = true}
+				<div class="list-row group">
+					<span class="tile bg-orange-500/12 text-orange-500"><i data-lucide="wrench"></i></span>
+					<div class="flex-1 min-w-0">
+						<div class="text-sm font-medium truncate">{$sr->description}</div>
+						<div class="text-xs text-muted truncate">{$sr->date|date:'j. n. Y'} · <span class="num">{$sr->mileage|number:0,',',' '} km</span>{ifset $sr->shop} · {$sr->shop}{/ifset}</div>
+					</div>
+					<div class="num text-sm font-semibold">{$sr->cost|czk}</div>
+					<div class="flex opacity-0 group-hover:opacity-100 transition">
+						<a n:href="Service:edit $sr->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+						<a n:href="Service:delete $sr->id" data-confirm="Smazat servisní záznam?" class="btn-icon danger" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+					</div>
+				</div>
+			{/foreach}
+		</div>
+		<p n:if="!$hasServices" class="text-sm text-muted py-6 text-center">Zatím žádný servis.</p>
+	</section>
+
+	{* Fuel log *}
+	<section class="card p-6 lg:col-span-2 rise rise-4">
+		<div class="flex justify-between items-center mb-2">
+			<h2 class="section-title">Tankování</h2>
+			<a n:href="Fuel:add $car->id" class="btn btn-ghost text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Přidat</a>
+		</div>
+		{if $fuel}
+			<div class="overflow-x-auto -mx-6 px-6">
+				<table class="w-full text-sm min-w-[560px]">
+					<thead>
+						<tr class="text-left text-xs text-muted">
+							<th class="font-medium py-2">Datum</th>
+							<th class="font-medium py-2">Stanice</th>
+							<th class="font-medium py-2 text-right">Tachometr</th>
+							<th class="font-medium py-2 text-right">Litry</th>
+							<th class="font-medium py-2 text-right">Kč/l</th>
+							<th class="font-medium py-2 text-right">Cena</th>
+							<th class="font-medium py-2 text-right">Spotřeba</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr n:foreach="$fuel as $f" class="border-t border-line group">
+							<td class="py-2.5 whitespace-nowrap">{$f->date|date:'j. n. Y'}</td>
+							<td class="py-2.5 text-muted">{$f->station ?? '—'}{if !$f->fullTank} <span class="badge badge-muted ml-1">dotankování</span>{/if}</td>
+							<td class="py-2.5 text-right num">{$f->mileage|number:0,',',' '} km</td>
+							<td class="py-2.5 text-right num">{$f->liters|number:2,',',' '}</td>
+							<td class="py-2.5 text-right num text-muted">{$f->priceTotal / $f->liters|number:2,',',' '}</td>
+							<td class="py-2.5 text-right num font-medium">{$f->priceTotal|czk}</td>
+							<td class="py-2.5 text-right num">
+								{ifset $fuelStats['perRecord'][$f->id]}
+									{var $c = $fuelStats['perRecord'][$f->id]}
+									<span n:class="'badge', $fuelStats['avg'] !== null && $c > $fuelStats['avg'] * 1.1 ? 'badge-warn' : 'badge-muted'">{$c|number:1,',',' '} l</span>
+								{else}<span class="text-faint">—</span>{/ifset}
+							</td>
+							<td class="py-2.5 text-right whitespace-nowrap">
+								<span class="inline-flex opacity-0 group-hover:opacity-100 transition">
+									<a n:href="Fuel:edit $f->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+									<a n:href="Fuel:delete $f->id" data-confirm="Smazat tankování (i související výdaj)?" class="btn-icon danger" title="Smazat"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+								</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		{else}
+			<div class="text-center py-8">
+				<p class="text-sm text-muted mb-1">Zapisuj tankování a uvidíš reálnou spotřebu a cenu za kilometr.</p>
+				<p class="text-xs text-faint mb-4">Spotřeba se počítá mezi dvěma plnými nádržemi.</p>
+				<a n:href="Fuel:add $car->id" class="btn btn-secondary"><i data-lucide="fuel" class="w-4 h-4"></i>První tankování</a>
+			</div>
+		{/if}
+	</section>
+</div>
+
+<div class="mt-8 text-center">
+	<a n:href="delete $car->id" data-confirm="Opravdu smazat auto včetně servisu, dokumentů a tankování? Transakce zůstanou." class="btn btn-danger"><i data-lucide="trash-2" class="w-4 h-4"></i>Smazat auto</a>
+</div>
+{/block}

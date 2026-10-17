@@ -9,7 +9,7 @@ import {
 	ArrowUpRight, ArrowDownLeft, Pencil, Trash2, Check, X, Command, Monitor, Smartphone, Sparkles, Bell, Zap,
 	Eye, EyeOff, ArrowRight, ArrowLeft, Receipt, TrendingUp, TrendingDown, Droplet, MapPin, Pin, Download,
 	Lock, User, Mail, CircleAlert, Upload, Tag, Clock, Route, Banknote, CornerDownLeft, LayoutGrid,
-	Link, ListChecks, ShoppingCart, Settings, UserMinus, RefreshCw, HousePlus, GripVertical, SlidersHorizontal, RotateCcw, Columns2, Menu,
+	Link, ListChecks, ShoppingCart, Settings, UserMinus, RefreshCw, HousePlus, GripVertical, SlidersHorizontal, RotateCcw, Columns2, Menu, Repeat, Landmark, SkipForward, Cookie,
 } from 'lucide';
 
 const icons = {
@@ -18,7 +18,7 @@ const icons = {
 	ArrowUpRight, ArrowDownLeft, Pencil, Trash2, Check, X, Command, Monitor, Smartphone, Sparkles, Bell, Zap,
 	Eye, EyeOff, ArrowRight, ArrowLeft, Receipt, TrendingUp, TrendingDown, Droplet, MapPin, Pin, Download,
 	Lock, User, Mail, CircleAlert, Upload, Tag, Clock, Route, Banknote, CornerDownLeft, LayoutGrid,
-	Link, ListChecks, ShoppingCart, Settings, UserMinus, RefreshCw, HousePlus, GripVertical, SlidersHorizontal, RotateCcw, Columns2, Menu,
+	Link, ListChecks, ShoppingCart, Settings, UserMinus, RefreshCw, HousePlus, GripVertical, SlidersHorizontal, RotateCcw, Columns2, Menu, Repeat, Landmark, SkipForward, Cookie,
 };
 const iconAttrs = { 'stroke-width': 1.75 };
 
@@ -176,7 +176,7 @@ Alpine.data('dashboardEditor', () => ({
 	async save() {
 		this.saving = true;
 		try {
-			const res = await fetch(this.$el.dataset.saveUrl, {
+			const res = await fetch(this.$root.dataset.saveUrl, { // $el is the clicked button here
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
 				body: JSON.stringify(this.items),
@@ -241,11 +241,47 @@ function initFileDrops() {
 	});
 }
 
+// data-confirm="Question?" on a link/button → styled <dialog> instead of the browser confirm().
+// Optional data-confirm-ok="Label"; destructive wording (Smazat, Odebrat…) gets a red button.
 function initConfirmLinks() {
-	document.addEventListener('click', (e) => {
+	let dialog;
+	const open = (text, okLabel, danger) => new Promise((resolve) => {
+		if (!dialog) {
+			dialog = document.createElement('dialog');
+			dialog.className = 'confirm-dialog';
+			dialog.innerHTML = '<form method="dialog"><div class="confirm-icon"></div><p class="confirm-text"></p>'
+				+ '<div class="confirm-actions"><button value="" class="btn btn-secondary">Zrušit</button><button value="ok" class="btn confirm-ok"></button></div></form>';
+			dialog.addEventListener('click', (e) => e.target === dialog && dialog.close()); // backdrop
+			document.body.append(dialog);
+		}
+		dialog.querySelector('.confirm-text').textContent = text;
+		dialog.querySelector('.confirm-icon').innerHTML = window.icon(danger ? 'Trash2' : 'CircleAlert');
+		dialog.querySelector('.confirm-icon').classList.toggle('danger', danger);
+		const ok = dialog.querySelector('.confirm-ok');
+		ok.textContent = okLabel;
+		ok.className = 'btn confirm-ok ' + (danger ? 'btn-danger-solid' : 'btn-primary');
+		dialog.returnValue = '';
+		dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok'), { once: true });
+		dialog.showModal();
+		ok.focus();
+	});
+
+	document.addEventListener('click', async (e) => {
 		const target = e.target.closest('[data-confirm]');
-		if (target && !confirm(target.dataset.confirm)) {
-			e.preventDefault();
+		if (!target || target.dataset.confirmed) return;
+		e.preventDefault();
+		const text = target.dataset.confirm;
+		const verb = { smaz: 'Smazat', odebr: 'Odebrat', odpoj: 'Odpojit', opust: 'Opustit' };
+		const hit = Object.keys(verb).find((k) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(k));
+		const danger = !!hit;
+		const label = target.dataset.confirmOk || (hit ? verb[hit] : 'Potvrdit');
+		if (!(await open(text, label, danger))) return;
+		if (target.href) {
+			window.location.href = target.href;
+		} else {
+			target.dataset.confirmed = '1'; // let the second click through (form submit buttons)
+			target.click();
+			delete target.dataset.confirmed;
 		}
 	});
 }

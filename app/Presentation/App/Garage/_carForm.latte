@@ -1,0 +1,90 @@
+{import '../@components.latte'}
+{* Car form with a live preview card. Alpine reads the inputs (no x-model, so server defaults stay intact). *}
+{var $photoUrl = isset($car) && $car?->photo ? $basePath . '/www/upload/' . $car->photo : ''}
+<div class="grid lg:grid-cols-[1fr_20rem] gap-6 items-start"
+	x-data="{ name: '', plate: '', country: '', year: '', price: '', photo: '', read() { const f = this.$root.querySelector('form'); const v = (n) => f.elements[n].value; this.name = v('name'); this.plate = v('licensePlate').toUpperCase(); this.country = v('plateCountry'); this.year = v('year'); this.price = v('purchasePrice') } }"
+	data-photo="{$photoUrl}" x-init="photo = $el.dataset.photo; read()" @input="read()">
+
+	<div class="card p-6 sm:p-8 rise rise-2">
+		{form carForm, class: 'space-y-6'}
+			{include formErrors, form: $form}
+
+			<div class="grid sm:grid-cols-[1fr_8rem] gap-4">
+				{include field, form: $form, name: 'name'}
+				{include field, form: $form, name: 'year'}
+			</div>
+
+			<div class="grid sm:grid-cols-2 gap-4">
+				<div>
+					{label licensePlate, class: 'label' /}
+					{* Czech plate look: blue EU strip + mono uppercase *}
+					<div class="flex items-stretch rounded-xl overflow-hidden ring-1 ring-line focus-within:ring-2 focus-within:ring-accent bg-surface">
+						<label class="w-11 bg-[#003399] text-white flex flex-col items-center justify-end pb-1 shrink-0 cursor-pointer hover:bg-[#0040b8] transition" title="Země registrace">
+							<svg viewBox="0 0 24 24" class="w-4 h-4 mb-1" fill="#ffcc00" aria-hidden="true"><circle cx="12" cy="4" r="1.3"/><circle cx="16" cy="5.1" r="1.3"/><circle cx="19" cy="8" r="1.3"/><circle cx="20" cy="12" r="1.3"/><circle cx="19" cy="16" r="1.3"/><circle cx="16" cy="18.9" r="1.3"/><circle cx="12" cy="20" r="1.3"/><circle cx="8" cy="18.9" r="1.3"/><circle cx="5" cy="16" r="1.3"/><circle cx="4" cy="12" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="8" cy="5.1" r="1.3"/></svg>
+							<select n:name="plateCountry" class="appearance-none bg-transparent text-white text-[10px] font-bold text-center w-full cursor-pointer outline-none [&>option]:text-black"></select>
+						</label>
+						{input licensePlate, class: 'flex-1 min-w-0 bg-transparent px-3 py-2.5 font-mono text-lg font-semibold uppercase tracking-[0.15em] outline-none', placeholder: '1AB 2345'}
+					</div>
+					<p n:foreach="$form['licensePlate']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+				</div>
+				<div>
+					{label purchasePrice, class: 'label' /}
+					<div class="relative">
+						{input purchasePrice, class: 'input pr-12'}
+						<span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted pointer-events-none">Kč</span>
+					</div>
+					<p n:foreach="$form['purchasePrice']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+				</div>
+			</div>
+
+			<div>
+				{label vin, class: 'label' /}
+				{input vin, class: 'input font-mono uppercase tracking-wider', placeholder: 'WBA…', maxlength: 17, autocomplete: 'off', spellcheck: 'false'}
+				<p class="text-xs text-muted mt-1.5">17 znaků, najdeš ho v malém technickém průkazu (kolonka E) nebo pod čelním sklem.</p>
+				<p n:foreach="$form['vin']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+			</div>
+
+			<div>
+				{label photo, class: 'label' /}
+				<label class="file-drop block cursor-pointer rounded-2xl border-2 border-dashed transition p-6 text-center">
+					<i data-lucide="upload" class="w-7 h-7 text-faint mx-auto"></i>
+					<div class="text-sm font-medium mt-2"><span class="text-accent">Vyber fotku</span> nebo ji sem přetáhni</div>
+					<div class="text-xs text-muted mt-1">JPG, PNG, WebP · max 5 MB{if $photoUrl} · nahráním nahradíš současnou{/if}</div>
+					<div class="file-name text-xs text-pos font-medium hidden mt-2"></div>
+					<input n:name="photo" class="sr-only" @change="const f = $event.target.files[0]; if (f) photo = URL.createObjectURL(f)">
+				</label>
+				<p n:foreach="$form['photo']->getErrors() as $e" class="form-error mt-1.5">{$e}</p>
+			</div>
+
+			<div class="flex items-center gap-3 pt-2">
+				{input send, class: 'btn btn-primary btn-lg'}
+				<a href="{$cancelUrl}" class="btn btn-secondary btn-lg">Zrušit</a>
+			</div>
+		{/form}
+	</div>
+
+	{* Live preview — same look as the garage list card *}
+	<div class="lg:sticky lg:top-8 rise rise-3">
+		<div class="eyebrow mb-2 px-1">Náhled</div>
+		<div class="card overflow-hidden">
+			<div class="aspect-[16/10] bg-surface-2 flex items-center justify-center overflow-hidden">
+				<img x-show="photo" :src="photo" alt="" class="w-full h-full object-cover" x-cloak>
+				<i x-show="!photo" data-lucide="car" class="w-14 h-14 text-faint"></i>
+			</div>
+			<div class="p-5">
+				<div class="font-semibold text-[17px] tracking-tight truncate" x-text="name || 'Název auta'"></div>
+				<div class="flex items-center gap-2 mt-2">
+					<span class="inline-flex items-stretch rounded-md overflow-hidden ring-1 ring-line text-sm">
+						<span class="px-1 bg-[#003399] text-white text-[9px] font-bold flex items-end pb-0.5" x-text="country"></span>
+						<span class="px-2 py-0.5 font-mono font-semibold tracking-wider bg-surface" x-text="plate || '— — —'"></span>
+					</span>
+					<span class="text-sm text-muted" x-text="year"></span>
+				</div>
+				<div class="mt-4 pt-4 border-t border-line flex justify-between text-sm">
+					<span class="text-muted">Pořízeno za</span>
+					<span class="num font-semibold" x-text="price ? Number(String(price).replace(',', '.')).toLocaleString('cs-CZ') + ' Kč' : '—'"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

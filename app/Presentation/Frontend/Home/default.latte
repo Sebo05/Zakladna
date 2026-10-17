@@ -1,0 +1,577 @@
+{block title}Auta, peníze, cíle a domácnost na jednom místě{/block}
+{block description}Základna hlídá STK, pojištění a dálniční známku, počítá spotřebu, rozpočty a spořicí cíle a vyrovná společné výdaje v domácnosti. Napojení na Fio a Českou spořitelnu, widget pro Windows. Zdarma a bez reklam.{/block}
+
+{define check, string $text}
+	<li class="flex gap-3"><span class="w-5 h-5 rounded-full bg-accent/12 text-accent flex items-center justify-center shrink-0 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></span><span>{$text}</span></li>
+{/define}
+
+{define faq, string $q, string $a}
+	<div class="border-b border-line" x-data="{ open: false }">
+		<button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-6 py-5 text-left">
+			<span class="text-lg font-medium">{$q}</span>
+			<span class="w-8 h-8 rounded-full bg-surface-2 flex items-center justify-center shrink-0 transition-transform duration-300" :class="open && 'rotate-45'"><i data-lucide="plus" class="w-4 h-4"></i></span>
+		</button>
+		<div x-show="open" x-cloak x-transition.opacity.duration.200ms class="pb-5 -mt-1 text-muted leading-relaxed pr-12">{$a}</div>
+	</div>
+{/define}
+
+{block content}
+{var $faqs = [
+	'Kolik Základna stojí?' => 'Nic. Je zdarma a bez reklam.',
+	'Jak se počítá spotřeba?' => 'Metodou plné nádrže: litry natankované od minulé plné nádrže vydělené ujetými kilometry. Dotankování bez plné nádrže se připočte k další plné.',
+	'Jak funguje domácnost?' => 'Jeden člen domácnost založí a ostatním pošle šestimístný kód nebo odkaz. Společné výdaje se rozdělí rovným dílem a Základna navrhne co nejméně plateb k vyrovnání.',
+	'Upozorní mě Základna na konec STK?' => 'Ano. E-mailem 30, 7 a 1 den předem, stejně jako na konec pojištění a dálniční známky, zítřejší události a blížící se opakované platby.',
+	'Umí stahovat platby z banky?' => 'Ano, z Fio banky přes token jen pro čtení a z České spořitelny přes přihlášení v bance. Pohyby se samy zapíšou do Financí, nic se nedá odeslat.',
+	'Dá se Základna používat v mobilu?' => 'Ano. Otevři ji v prohlížeči telefonu a zvol „Přidat na plochu“. Spustí se jako samostatná aplikace se spodní navigací.',
+	'Co je widget pro Windows?' => 'Malý průsvitný panel na plochu, který ukazuje zůstatek měsíce, blížící se termíny a události. Dá se připnout nad ostatní okna a řídí se světlým i tmavým režimem systému.',
+	'Můžu svá data exportovat?' => 'Ano, v nastavení profilu si stáhneš transakce do CSV pro Excel. Účet i všechna data můžeš kdykoli smazat.',
+]}
+{var $home = $presenter->link('//Home:default')}
+<script type="application/ld+json">{=[
+	'@context' => 'https://schema.org',
+	'@graph' => [
+		[
+			'@type' => 'WebSite',
+			'@id' => $home . '#website',
+			'url' => $home,
+			'name' => 'Základna',
+			'inLanguage' => 'cs-CZ',
+			'publisher' => ['@id' => $home . '#operator'],
+		],
+		[
+			'@type' => 'Person',
+			'@id' => $home . '#operator',
+			'name' => $operator['name'],
+			'email' => 'mailto:' . $operator['email'],
+		],
+		[
+			'@type' => 'WebApplication',
+			'@id' => $home . '#app',
+			'name' => 'Základna',
+			'url' => $home,
+			'applicationCategory' => 'FinanceApplication',
+			'applicationSubCategory' => 'Osobní finance a evidence auta',
+			'operatingSystem' => 'Web, Windows, Android, iOS',
+			'browserRequirements' => 'Moderní prohlížeč s JavaScriptem',
+			'inLanguage' => 'cs-CZ',
+			'isAccessibleForFree' => true,
+			'description' => 'Osobní přehled aut, financí, spořicích cílů a domácnosti: STK a pojištění, spotřeba, rozpočty, opakované platby, napojení na banku, společné výdaje a widget pro Windows.',
+			'image' => rtrim($presenter->getHttpRequest()->getUrl()->getBaseUrl(), '/') . '/www/og-image.png',
+			'featureList' => [
+				'Hlídání STK, pojištění a dálniční známky s e-mailovým upozorněním',
+				'Tankování a výpočet spotřeby',
+				'Příjmy, výdaje, rozpočty a opakované platby',
+				'Import plateb z Fio banky a České spořitelny',
+				'Spořicí cíle',
+				'Sdílená domácnost: společné výdaje, vyrovnání, nákupní seznam',
+				'Widget na plochu Windows a mobilní aplikace (PWA)',
+			],
+			'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'CZK'],
+			'publisher' => ['@id' => $home . '#operator'],
+		],
+		[
+			'@type' => 'FAQPage',
+			'@id' => $home . '#faq',
+			'mainEntity' => array_map(fn($q, $a) => ['@type' => 'Question', 'name' => $q, 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $a]], array_keys($faqs), $faqs),
+		],
+	],
+]}</script>
+{var $cta = $user->isLoggedIn() ? $presenter->link(':App:Dashboard:default') : $presenter->link('Auth:register')}
+{var $ctaLabel = $user->isLoggedIn() ? 'Otevřít aplikaci' : 'Začít zdarma'}
+
+{* ================= HERO ================= *}
+<section class="relative -mt-14 pt-14 overflow-hidden">
+	<div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+	<div class="absolute inset-0 grid-bg pointer-events-none" aria-hidden="true"></div>
+	<div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-b from-transparent to-canvas pointer-events-none" aria-hidden="true"></div>
+
+	<div class="relative max-w-6xl mx-auto px-5 pt-16 sm:pt-28 text-center">
+		<span class="pill rise"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i>Nově: domácnost, spořicí cíle a widget na plochu</span>
+		<h1 class="mt-7 text-[2.75rem] leading-[1.02] sm:text-7xl lg:text-[5.5rem] font-bold tracking-[-0.045em] rise rise-2">
+			Všechno důležité.<br>
+			<span class="text-shine">Na jedné základně.</span>
+		</h1>
+		<p class="mt-7 text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed rise rise-3">
+			STK a pojištění, skutečná spotřeba, rozpočty, spořicí cíle i společné výdaje s lidmi, se kterými bydlíš. Klidně a přehledně, na webu, v mobilu i na ploše Windows.
+		</p>
+		<div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 rise rise-4">
+			<a href="{$cta}" class="btn btn-primary btn-lg w-full sm:w-auto shadow-lg shadow-blue-500/25">{$ctaLabel}<i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+			<a href="#funkce" class="btn btn-secondary btn-lg w-full sm:w-auto">Prohlédnout funkce</a>
+		</div>
+		<p class="mt-5 text-sm text-faint rise rise-4">Zdarma · Bez reklam · Česky</p>
+
+		{* Product mock *}
+		<div class="relative mt-16 sm:mt-24 tilt-wrap">
+			{* floating chips *}
+			<div class="hidden xl:flex absolute -left-20 top-28 z-10 float-a card glass items-center gap-3 px-4 py-3 text-left" style="box-shadow: var(--shadow-lg)">
+				<span class="tile bg-orange-500/15 text-orange-500"><i data-lucide="wrench"></i></span>
+				<div><div class="text-sm font-semibold">STK za 9 dní</div><div class="text-xs text-muted">Škoda Octavia</div></div>
+			</div>
+			<div class="hidden xl:flex absolute -right-20 top-64 z-10 float-b card glass items-center gap-3 px-4 py-3 text-left" style="box-shadow: var(--shadow-lg)">
+				<span class="tile bg-pos/15 text-pos"><i data-lucide="target"></i></span>
+				<div><div class="text-sm font-semibold">Dovolená · 72 %</div><div class="text-xs text-muted">ještě 8 400 Kč</div></div>
+			</div>
+			<div class="hidden xl:flex absolute left-24 -bottom-7 z-10 float-c card glass items-center gap-2 px-4 py-2.5" style="box-shadow: var(--shadow-lg)">
+				<span class="kbd">Ctrl</span><span class="kbd">K</span><span class="text-sm text-muted ml-1">Přidat tankování…</span>
+			</div>
+
+			<div class="tilt card overflow-hidden text-left mx-auto max-w-5xl ring-1 ring-line" style="box-shadow: 0 40px 120px -20px rgb(37 99 235 / 0.35), var(--shadow-lg)">
+				<div class="flex items-center gap-1.5 px-4 h-10 border-b border-line bg-surface-2/60">
+					<span class="w-3 h-3 rounded-full bg-[#ff5f57]"></span><span class="w-3 h-3 rounded-full bg-[#febc2e]"></span><span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
+					<span class="mx-auto text-xs text-muted flex items-center gap-1.5"><i data-lucide="lock" class="w-3 h-3"></i>zakladna.app</span>
+				</div>
+				<div class="flex">
+					<div class="hidden md:flex flex-col w-52 border-r border-line p-3 space-y-0.5 text-sm">
+						<div class="nav-link active py-1.5!"><i data-lucide="house"></i>Přehled</div>
+						<div class="nav-link py-1.5!"><i data-lucide="car"></i>Garáž</div>
+						<div class="nav-link py-1.5!"><i data-lucide="wallet"></i>Finance</div>
+						<div class="nav-link py-1.5!"><i data-lucide="piggy-bank"></i>Rozpočty</div>
+						<div class="nav-link py-1.5!"><i data-lucide="target"></i>Cíle</div>
+						<div class="nav-link py-1.5!"><i data-lucide="house-plus"></i>Domácnost</div>
+						<div class="nav-link py-1.5!"><i data-lucide="calendar"></i>Kalendář</div>
+					</div>
+					<div class="flex-1 p-4 sm:p-7 bg-canvas min-w-0">
+						<div class="eyebrow">Pátek 17. října</div>
+						<div class="text-xl sm:text-2xl font-bold tracking-tight mt-0.5">Dobrý den, Petro</div>
+						<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-5">
+							<div class="card p-5 sm:col-span-2">
+								<div class="eyebrow">Zůstatek · říjen</div>
+								<div class="num text-3xl sm:text-4xl font-semibold mt-1" data-count="28175" data-prefix="+" data-suffix=" Kč">+28 175 Kč</div>
+								<div class="progress mt-4 flex fill" data-reveal><span class="bg-pos rounded-r-none!" style="--w: 69%"></span><span class="bg-neg rounded-l-none!" style="--w: 31%"></span></div>
+								<div class="flex justify-between text-sm mt-3"><span class="text-pos num">↓ 52 000 Kč</span><span class="text-neg num">↑ 23 825 Kč</span></div>
+							</div>
+							<div class="card p-5 space-y-3">
+								<div class="section-title text-sm!">Rozpočty</div>
+								<div><div class="flex justify-between text-xs mb-1"><span>Jídlo</span><span class="text-muted">85 %</span></div><div class="progress fill" data-reveal><span class="bg-warn" style="--w: 85%"></span></div></div>
+								<div><div class="flex justify-between text-xs mb-1"><span>Zábava</span><span class="text-muted">59 %</span></div><div class="progress fill" data-reveal><span class="bg-accent" style="--w: 59%"></span></div></div>
+								<div><div class="flex justify-between text-xs mb-1"><span>Palivo</span><span class="text-neg">110 %</span></div><div class="progress fill" data-reveal><span class="bg-neg" style="--w: 100%"></span></div></div>
+							</div>
+							<div class="card p-5 sm:col-span-2 hidden sm:block">
+								<div class="section-title text-sm! mb-1">Termíny u aut</div>
+								<div class="list-row"><span class="tile bg-orange-500/12 text-orange-500"><i data-lucide="wrench"></i></span><div class="flex-1 text-sm font-medium">STK · Škoda Octavia</div><span class="badge badge-warn">za 9 dní</span></div>
+								<div class="list-row"><span class="tile bg-sky-500/12 text-sky-500"><i data-lucide="shield-check"></i></span><div class="flex-1 text-sm font-medium">Pojištění · Škoda Octavia</div><span class="badge badge-pos">za 41 dní</span></div>
+							</div>
+							<div class="card p-5 hidden sm:flex items-center gap-4">
+								<svg viewBox="0 0 80 80" class="w-16 h-16 -rotate-90 shrink-0" data-reveal>
+									<circle cx="40" cy="40" r="34" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
+									<circle cx="40" cy="40" r="34" fill="none" stroke="#30d158" stroke-width="8" stroke-linecap="round" stroke-dasharray="213.6" class="ring-draw" style="--off: 60"/>
+								</svg>
+								<div><div class="text-sm font-semibold">Dovolená</div><div class="text-xs text-muted num">21 600 / 30 000 Kč</div></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+{* ================= MARQUEE ================= *}
+<section class="mt-20 sm:mt-28 marquee overflow-hidden" aria-label="Co Základna umí">
+	<div class="marquee-track gap-3">
+		{foreach [1, 2] as $_}
+			{foreach [['wrench', 'STK'], ['shield-check', 'Povinné ručení'], ['ticket', 'Dálniční známka'], ['fuel', 'Spotřeba l/100 km'], ['route', 'Cena za kilometr'], ['wallet', 'Příjmy a výdaje'], ['piggy-bank', 'Rozpočty'], ['target', 'Spořicí cíle'], ['house-plus', 'Domácnost'], ['receipt', 'Kdo komu dluží'], ['shopping-cart', 'Nákupní seznam'], ['list-checks', 'Úkoly'], ['calendar-days', 'Kalendář'], ['command', 'Ctrl + K'], ['monitor', 'Widget pro Windows'], ['smartphone', 'Aplikace v mobilu']] as $f}
+				<span class="pill shrink-0 text-sm! px-4! py-2! text-ink!" aria-hidden="{$_ === 2 ? 'true' : 'false'}"><i data-lucide="{$f[0]}" class="w-4 h-4 text-accent"></i>{$f[1]}</span>
+			{/foreach}
+		{/foreach}
+	</div>
+</section>
+
+{* ================= STORY: GARAGE ================= *}
+<section id="funkce" class="max-w-6xl mx-auto px-5 pt-28 sm:pt-40 scroll-mt-16">
+	<div class="text-center max-w-3xl mx-auto" data-reveal>
+		<span class="pill"><i data-lucide="layout-grid" class="w-3.5 h-3.5 text-accent"></i>Funkce</span>
+		<h2 class="text-4xl sm:text-6xl font-bold tracking-[-0.035em] mt-5 leading-[1.05]">Konec lepíků<br class="sm:hidden"> na lednici.</h2>
+		<p class="text-lg sm:text-xl text-muted mt-5">Základna si pamatuje termíny, počítá za tebe a upozorní dřív, než je pozdě.</p>
+	</div>
+
+	<div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mt-20 sm:mt-28">
+		<div data-reveal>
+			<span class="tile bg-orange-500/12 text-orange-500 w-12 h-12 rounded-2xl"><i data-lucide="car"></i></span>
+			<h3 class="text-3xl sm:text-4xl font-bold tracking-tight mt-6">Garáž, která nezapomíná.</h3>
+			<p class="text-lg text-muted mt-4 leading-relaxed">STK, povinné ručení, havarijní pojištění i dálniční známka na jednom místě. K tomu servisní historie a tankování, ze kterého spočítáme skutečnou spotřebu i cenu za kilometr.</p>
+			<ul class="mt-7 space-y-3">
+				{include check, text: 'Odpočet dní do každého termínu'}
+				{include check, text: 'Spotřeba mezi dvěma plnými nádržemi'}
+				{include check, text: 'Tankování se samo zapíše do výdajů'}
+			</ul>
+		</div>
+		<div class="relative" data-reveal="2">
+			<div class="absolute -inset-6 bg-linear-to-tr from-orange-400/20 via-amber-300/10 to-transparent blur-3xl rounded-full" aria-hidden="true"></div>
+			<div class="relative card p-6 sm:p-7 glow">
+				<div class="flex items-center gap-4">
+					<div class="w-16 h-16 rounded-2xl bg-linear-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white shrink-0"><i data-lucide="car" class="w-8 h-8"></i></div>
+					<div>
+						<div class="text-xl font-semibold tracking-tight">Škoda Octavia</div>
+						<div class="text-sm text-muted"><span class="font-mono">1AB 2345</span> · 2019</div>
+					</div>
+				</div>
+				<div class="grid grid-cols-3 gap-2.5 mt-6 text-sm">
+					<div class="rounded-2xl bg-surface-2 p-3.5"><i data-lucide="wrench" class="w-4 h-4 text-orange-500"></i><div class="font-medium mt-2">STK</div><div class="text-warn text-xs mt-0.5 font-medium">za 9 dní</div></div>
+					<div class="rounded-2xl bg-surface-2 p-3.5"><i data-lucide="shield-check" class="w-4 h-4 text-sky-500"></i><div class="font-medium mt-2">Pojištění</div><div class="text-pos text-xs mt-0.5 font-medium">za 41 dní</div></div>
+					<div class="rounded-2xl bg-surface-2 p-3.5"><i data-lucide="ticket" class="w-4 h-4 text-violet-500"></i><div class="font-medium mt-2">Známka</div><div class="text-neg text-xs mt-0.5 font-medium">propadlá</div></div>
+				</div>
+				<div class="mt-6 rounded-2xl bg-surface-2 p-5">
+					<div class="flex items-end justify-between">
+						<div>
+							<div class="eyebrow">Průměrná spotřeba</div>
+							<div class="num text-4xl font-semibold tracking-tight mt-1" data-count="5.6" data-decimals="1" data-suffix=" l">5,6 l</div>
+						</div>
+						<div class="text-right"><div class="eyebrow">Na kilometr</div><div class="num text-xl font-semibold mt-1">2,22 Kč</div></div>
+					</div>
+					<svg viewBox="0 0 300 70" class="w-full h-16 mt-4 overflow-visible" fill="none" data-reveal>
+						<defs><linearGradient id="fuelg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".25"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+						<path d="M0 46 L37 38 L75 43 L112 27 L150 33 L187 21 L225 29 L262 15 L300 22 L300 70 L0 70 Z" fill="url(#fuelg)"/>
+						<path d="M0 46 L37 38 L75 43 L112 27 L150 33 L187 21 L225 29 L262 15 L300 22" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="300" cy="22" r="5" fill="var(--accent)"/>
+					</svg>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{* ================= STORY: MONEY ================= *}
+	<div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mt-28 sm:mt-40">
+		<div class="lg:order-2" data-reveal>
+			<span class="tile bg-pos/12 text-pos w-12 h-12 rounded-2xl"><i data-lucide="wallet"></i></span>
+			<h3 class="text-3xl sm:text-4xl font-bold tracking-tight mt-6">Peníze, které dávají smysl.</h3>
+			<p class="text-lg text-muted mt-4 leading-relaxed">Příjmy a výdaje po dnech, kategorie, grafy za rok a rozpočty s čárkou „dnešek“. Hned vidíš, jestli utrácíš rychleji, než by sis přál.</p>
+			<ul class="mt-7 space-y-3">
+				{include check, text: 'Měsíční limity na kategorie'}
+				{include check, text: 'Upozornění při přečerpání'}
+				{include check, text: 'Statistiky za posledních 12 měsíců'}
+			</ul>
+		</div>
+		<div class="relative lg:order-1" data-reveal="2">
+			<div class="absolute -inset-6 bg-linear-to-tr from-emerald-400/20 via-sky-300/10 to-transparent blur-3xl rounded-full" aria-hidden="true"></div>
+			<div class="relative card p-6 sm:p-7 glow">
+				<div class="flex items-center justify-between">
+					<div class="section-title">Rozpočty · říjen</div>
+					<span class="badge badge-warn">Rychlejší než plán</span>
+				</div>
+				<div class="num text-4xl sm:text-5xl font-semibold tracking-tight mt-5" data-count="9325" data-suffix=" Kč">9 325 Kč</div>
+				<div class="text-muted">z 10 500 Kč</div>
+				<div class="space-y-5 mt-7">
+					{foreach [['Jídlo', '5 130 / 6 000 Kč', 85, 'bg-warn'], ['Zábava', '890 / 1 500 Kč', 59, 'bg-pos'], ['Palivo', '3 305 / 3 000 Kč', 100, 'bg-neg'], ['Domácnost', '1 240 / 4 000 Kč', 31, 'bg-pos']] as $b}
+						<div>
+							<div class="flex justify-between text-sm mb-1.5"><span class="font-medium">{$b[0]}</span><span n:class="'num', $b[2] >= 100 ? 'text-neg' : 'text-muted'">{$b[1]}</span></div>
+							<div class="relative">
+								<div class="progress h-2! fill" data-reveal><span class="{$b[3]}" style="--w: {$b[2]}%"></span></div>
+							</div>
+						</div>
+					{/foreach}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{* ================= STORY: GOALS ================= *}
+	<div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center mt-28 sm:mt-40">
+		<div data-reveal>
+			<span class="tile bg-violet-500/12 text-violet-500 w-12 h-12 rounded-2xl"><i data-lucide="target"></i></span>
+			<h3 class="text-3xl sm:text-4xl font-bold tracking-tight mt-6">Šetři na to, na čem záleží.</h3>
+			<p class="text-lg text-muted mt-4 leading-relaxed">Dovolená, nové auto, rezerva. Nastav částku a termín a Základna ti spočítá, kolik odkládat každý měsíc. Cíle můžeš mít i společné s domácností.</p>
+		</div>
+		<div class="grid grid-cols-2 gap-4" data-reveal="2">
+			{foreach [['Dovolená', '#30d158', 72, '21 600 Kč'], ['Rezerva', '#0a84ff', 45, '45 000 Kč'], ['Nové kolo', '#ff9f0a', 90, '18 000 Kč'], ['Gauč', '#bf5af2', 28, '5 600 Kč']] as $i => $g}
+				<div class="card p-5 sm:p-6 text-center glow">
+					<div class="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto">
+						<svg viewBox="0 0 80 80" class="w-full h-full -rotate-90" data-reveal>
+							<circle cx="40" cy="40" r="34" fill="none" stroke="var(--surface-2)" stroke-width="7"/>
+							<circle cx="40" cy="40" r="34" fill="none" stroke="{$g[1]|noescape}" stroke-width="7" stroke-linecap="round" stroke-dasharray="213.6" class="ring-draw" style="--off: {round(213.6 * (100 - $g[2]) / 100)}"/>
+						</svg>
+						<div class="absolute inset-0 flex items-center justify-center num text-xl font-semibold">{$g[2]} %</div>
+					</div>
+					<div class="font-semibold mt-4">{$g[0]}</div>
+					<div class="text-sm text-muted num">{$g[3]}</div>
+				</div>
+			{/foreach}
+		</div>
+	</div>
+</section>
+
+{* ================= BENTO ================= *}
+<section class="max-w-6xl mx-auto px-5 pt-28 sm:pt-40">
+	<div class="text-center max-w-2xl mx-auto" data-reveal>
+		<h2 class="text-4xl sm:text-5xl font-bold tracking-[-0.03em]">A spousta drobností,<br>které potěší.</h2>
+	</div>
+	<div class="grid grid-cols-1 md:grid-cols-6 gap-5 mt-14">
+		{* Palette typing demo *}
+		<div class="card p-7 md:col-span-3 glow" data-reveal x-data="typer">
+			<span class="tile bg-violet-500/12 text-violet-500"><i data-lucide="command"></i></span>
+			<h3 class="text-2xl font-semibold tracking-tight mt-5">Ctrl + K na všechno</h3>
+			<p class="text-muted mt-2">Najdi auto, transakci nebo událost. Přidej výdaj či tankování bez klikání.</p>
+			<div class="mt-6 rounded-2xl bg-surface-2 p-3 text-sm">
+				<div class="flex items-center gap-2 px-2 pb-3 border-b border-line">
+					<i data-lucide="search" class="w-4 h-4 text-muted"></i>
+					<span class="caret" x-text="typed"></span>
+				</div>
+				<div class="pt-2 space-y-1 min-h-[6.5rem]">
+					<template x-for="(r, i) in results" :key="r">
+						<div class="flex items-center gap-2 rounded-xl px-2 py-2 transition" :class="i === 0 ? 'bg-accent text-white' : ''">
+							<span class="w-1.5 h-1.5 rounded-full" :class="i === 0 ? 'bg-white' : 'bg-faint'"></span><span x-text="r"></span>
+						</div>
+					</template>
+				</div>
+			</div>
+		</div>
+
+		<div class="card p-7 md:col-span-3 glow" data-reveal="2">
+			<span class="tile bg-pink-500/12 text-pink-500"><i data-lucide="calendar-days"></i></span>
+			<h3 class="text-2xl font-semibold tracking-tight mt-5">Kalendář, který se plní sám</h3>
+			<p class="text-muted mt-2">Termíny z garáže se propíšou automaticky. Vlastní události k tomu.</p>
+			<div class="mt-6 grid grid-cols-7 gap-1.5 text-center text-xs">
+				{foreach ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'] as $d}<span class="text-faint pb-1">{$d}</span>{/foreach}
+				{foreach range(13, 26) as $d}
+					<span n:class="'py-2 rounded-lg num', $d === 17 ? 'bg-accent text-white font-semibold' : ($d === 19 || $d === 26 ? 'bg-orange-500/15 text-orange-500 font-medium' : ($d === 21 ? 'bg-accent/12 text-accent font-medium' : 'bg-surface-2'))">{$d}</span>
+				{/foreach}
+			</div>
+		</div>
+
+		<div class="card p-7 md:col-span-2 glow" data-reveal>
+			<span class="tile bg-sky-500/12 text-sky-500"><i data-lucide="bell"></i></span>
+			<h3 class="text-xl font-semibold tracking-tight mt-5">Barvy, které varují</h3>
+			<div class="flex flex-wrap gap-2 mt-5">
+				<span class="badge badge-pos">za 41 dní</span><span class="badge badge-warn">za 9 dní</span><span class="badge badge-neg">dnes</span><span class="badge badge-neg">propadlé</span>
+			</div>
+		</div>
+		<div class="card p-7 md:col-span-2 glow" data-reveal="2">
+			<span class="tile bg-amber-500/12 text-amber-500"><i data-lucide="moon"></i></span>
+			<h3 class="text-xl font-semibold tracking-tight mt-5">Tmavý režim</h3>
+			<p class="text-muted mt-2 text-sm">Řídí se systémem. Nebo si přepni sám.</p>
+			<button type="button" onclick="toggleTheme()" class="btn btn-secondary mt-4 text-sm"><i data-lucide="moon" class="w-4 h-4 dark:hidden!"></i><i data-lucide="sun" class="w-4 h-4 hidden! dark:block!"></i>Vyzkoušet</button>
+		</div>
+		<div class="card p-7 md:col-span-2 glow" data-reveal="3">
+			<span class="tile bg-ink/8 text-ink"><i data-lucide="lock"></i></span>
+			<h3 class="text-xl font-semibold tracking-tight mt-5">Tvoje data</h3>
+			<ul class="text-muted mt-4 space-y-2 text-sm">
+				{include check, text: 'Hesla bezpečně zahashovaná'}
+				{include check, text: 'Žádné reklamy ani prodej dat'}
+			</ul>
+		</div>
+	</div>
+</section>
+
+{* ================= HOUSEHOLD ================= *}
+<section id="domacnost" class="mt-28 sm:mt-40 scroll-mt-16">
+	<div class="max-w-6xl mx-auto px-5">
+		<div class="relative overflow-hidden rounded-[2.25rem] bg-linear-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-500/10 dark:via-orange-500/5 dark:to-rose-500/10 ring-1 ring-line p-7 sm:p-14">
+			<div class="grid lg:grid-cols-2 gap-12 items-center">
+				<div data-reveal>
+					<span class="tile w-12 h-12 rounded-2xl bg-linear-to-br from-amber-400 to-orange-500 text-white"><i data-lucide="house-plus"></i></span>
+					<h2 class="text-4xl sm:text-5xl font-bold tracking-[-0.03em] mt-6">Domácnost bez dohadování.</h2>
+					<p class="text-lg text-muted mt-4 leading-relaxed">Pozvi spolubydlící nebo partnera kódem. Zapisujte společné nákupy a Základna spočítá, kdo komu kolik dluží. Nákupní seznam a úkoly sdílíte v reálném čase.</p>
+					<ul class="mt-7 space-y-3">
+						{include check, text: 'Vyrovnání na co nejméně plateb'}
+						{include check, text: 'Společný rozpočet a spořicí cíle'}
+						{include check, text: 'Pozvánka šestimístným kódem'}
+					</ul>
+				</div>
+				<div class="grid sm:grid-cols-2 gap-4">
+					<div class="card p-5 sm:col-span-2" data-reveal="2">
+						<div class="section-title text-base! mb-3">Kdo komu dluží</div>
+						<div class="space-y-2.5">
+							<div class="flex items-center gap-3 rounded-2xl bg-surface-2 p-3.5">
+								<span class="w-8 h-8 rounded-full bg-linear-to-br from-pink-400 to-rose-500 text-white text-sm font-semibold flex items-center justify-center">K</span>
+								<i data-lucide="arrow-right" class="w-4 h-4 text-muted"></i>
+								<span class="w-8 h-8 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center">P</span>
+								<span class="text-sm text-muted hidden sm:inline">Kája → Petra</span>
+								<span class="num font-semibold ml-auto">1 240 Kč</span>
+							</div>
+							<div class="flex items-center gap-3 rounded-2xl bg-surface-2 p-3.5">
+								<span class="w-8 h-8 rounded-full bg-linear-to-br from-emerald-400 to-teal-500 text-white text-sm font-semibold flex items-center justify-center">T</span>
+								<i data-lucide="arrow-right" class="w-4 h-4 text-muted"></i>
+								<span class="w-8 h-8 rounded-full bg-linear-to-br from-sky-400 to-indigo-500 text-white text-sm font-semibold flex items-center justify-center">P</span>
+								<span class="text-sm text-muted hidden sm:inline">Tom → Petra</span>
+								<span class="num font-semibold ml-auto">380 Kč</span>
+							</div>
+						</div>
+					</div>
+					<div class="card p-5" data-reveal="3" x-data="{ items: [['Mléko', true], ['Chleba', false], ['Prací gel', false], ['Rajčata', true]] }">
+						<div class="section-title text-base! mb-2 flex items-center gap-2"><i data-lucide="shopping-cart" class="w-4 h-4 text-accent"></i>Nákup</div>
+						<template x-for="(it, i) in items" :key="i">
+							<button type="button" @click="it[1] = !it[1]" class="w-full flex items-center gap-2.5 py-1.5 text-sm text-left">
+								<span class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition" :class="it[1] ? 'bg-pos border-pos text-white' : 'border-line'">
+									<svg x-show="it[1]" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+								</span>
+								<span :class="it[1] ? 'line-through text-faint' : ''" x-text="it[0]"></span>
+							</button>
+						</template>
+						<p class="text-[11px] text-faint mt-2">Zkus to odškrtat.</p>
+					</div>
+					<div class="card p-5 flex flex-col" data-reveal="4">
+						<div class="section-title text-base!">Pozvánka</div>
+						<p class="text-xs text-muted mt-1">Pošli kód a je to.</p>
+						<div class="num font-mono text-2xl font-semibold tracking-[0.25em] text-center mt-auto py-3 rounded-2xl bg-surface-2">K7Q4WP</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+{* ================= WIDGET + PHONE ================= *}
+<section id="widget" class="mt-28 sm:mt-40 scroll-mt-16">
+	<div class="max-w-6xl mx-auto px-5">
+		<div class="relative overflow-hidden rounded-[2.25rem] bg-[#06080f] text-white p-7 sm:p-14">
+			<div class="aurora opacity-70" aria-hidden="true"><span></span><span></span><span></span></div>
+			<div class="relative text-center max-w-2xl mx-auto" data-reveal>
+				<span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-sm"><i data-lucide="monitor" class="w-3.5 h-3.5"></i>Windows &amp; <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>mobil</span>
+				<h2 class="text-4xl sm:text-6xl font-bold tracking-[-0.035em] mt-6">Vždycky po ruce.</h2>
+				<p class="text-lg text-white/65 mt-4">Průsvitný widget na ploše Windows 11 a aplikace na ploše telefonu. Bez App Storu, bez instalace.</p>
+			</div>
+
+			<div class="relative mt-14 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16">
+				{* Windows widget *}
+				<div class="w-full max-w-[21rem] rounded-[1.4rem] bg-white/10 backdrop-blur-2xl ring-1 ring-white/15 shadow-2xl p-5" data-reveal="2">
+					<div class="flex items-center gap-2.5">
+						<span class="w-7 h-7 rounded-lg bg-linear-to-br from-sky-400 to-indigo-600 flex items-center justify-center"><i data-lucide="car" class="w-4 h-4"></i></span>
+						<div class="leading-tight"><div class="font-semibold text-sm">Základna</div><div class="text-[11px] text-white/55">říjen 2026</div></div>
+						<div class="ml-auto flex gap-2 text-white/55"><i data-lucide="pin" class="w-4 h-4 text-sky-300"></i><i data-lucide="refresh-cw" class="w-4 h-4"></i><i data-lucide="x" class="w-4 h-4"></i></div>
+					</div>
+					<div class="mt-4 rounded-2xl bg-white/[0.07] p-4">
+						<div class="text-[10px] font-semibold text-white/55 tracking-wider">ZŮSTATEK MĚSÍCE</div>
+						<div class="text-3xl font-semibold text-emerald-300 num mt-1">+28 175 Kč</div>
+						<div class="h-1.5 rounded-full bg-white/10 mt-3 flex overflow-hidden"><span class="bg-emerald-400 w-[69%]"></span><span class="bg-rose-400 flex-1"></span></div>
+					</div>
+					<div class="mt-4 text-[10px] font-semibold text-white/55 tracking-wider">DOKUMENTY</div>
+					<div class="mt-2 space-y-2 text-sm">
+						<div class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center"><i data-lucide="wrench" class="w-3.5 h-3.5"></i></span><span class="flex-1">STK · Octavia</span><span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300">za 9 d</span></div>
+						<div class="flex items-center gap-2.5"><span class="w-7 h-7 rounded-lg bg-rose-400/20 text-rose-300 flex items-center justify-center"><i data-lucide="ticket" class="w-3.5 h-3.5"></i></span><span class="flex-1">Známka · MX-5</span><span class="text-[11px] px-2 py-0.5 rounded-full bg-rose-400/20 text-rose-300">propadlé</span></div>
+					</div>
+					<div class="mt-4 text-[10px] font-semibold text-white/55 tracking-wider">UDÁLOSTI · 7 DNÍ</div>
+					<div class="mt-2 flex items-center gap-2.5 text-sm"><span class="w-7 h-7 rounded-lg bg-sky-400/20 text-sky-300 flex items-center justify-center text-xs font-semibold">19</span><span class="flex-1">Zubař</span><span class="text-[11px] text-white/55">ne 19. 10.</span></div>
+				</div>
+
+				{* Phone *}
+				<div class="w-[15.5rem] h-[31rem] rounded-[2.8rem] bg-[#1c1c1e] p-2.5 ring-1 ring-white/15 shadow-2xl shrink-0" data-reveal="3">
+					<div class="relative w-full h-full rounded-[2.3rem] overflow-hidden [clip-path:inset(0_round_2.3rem)] isolate bg-[#f5f5f7] text-[#1d1d1f]">
+						<div class="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-6 rounded-full bg-black"></div>
+						<div class="px-4 pt-11">
+							<div class="text-[10px] text-[#6e6e73]">Pátek 17. října</div>
+							<div class="text-lg font-bold tracking-tight">Dobrý den, Petro</div>
+							<div class="mt-3 rounded-2xl bg-white p-3.5 shadow-sm">
+								<div class="text-[10px] text-[#6e6e73]">Zůstatek</div>
+								<div class="text-2xl font-semibold num">+28 175 Kč</div>
+								<div class="h-1 rounded-full mt-2 flex overflow-hidden bg-[#f2f2f4]"><span class="bg-[#1a9f4a] w-[69%]"></span><span class="bg-[#e0352b] flex-1"></span></div>
+							</div>
+							<div class="mt-2.5 rounded-2xl bg-white p-3 shadow-sm space-y-2 text-xs">
+								<div class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-orange-100 text-orange-500 flex items-center justify-center"><i data-lucide="wrench" class="w-3 h-3"></i></span><span class="flex-1 font-medium">STK</span><span class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px]">za 9 dní</span></div>
+								<div class="flex items-center gap-2"><span class="w-6 h-6 rounded-md bg-sky-100 text-sky-500 flex items-center justify-center"><i data-lucide="shield-check" class="w-3 h-3"></i></span><span class="flex-1 font-medium">Pojištění</span><span class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px]">za 41 dní</span></div>
+							</div>
+							<div class="mt-2.5 rounded-2xl bg-white p-3 shadow-sm text-xs">
+								<div class="flex justify-between"><span class="font-medium">Dovolená</span><span class="text-[#6e6e73]">72 %</span></div>
+								<div class="h-1 rounded-full mt-1.5 bg-[#f2f2f4] overflow-hidden"><span class="block h-full bg-[#30d158] w-[72%]"></span></div>
+							</div>
+						</div>
+						<div class="absolute bottom-0 inset-x-0 h-[4.75rem] pb-4 bg-white/90 backdrop-blur border-t border-black/5 flex items-center justify-around px-5 text-[#6e6e73]">
+							<i data-lucide="house" class="w-5 h-5 text-[#0071e3]"></i><i data-lucide="car" class="w-5 h-5"></i>
+							<span class="w-11 h-11 -mt-5 rounded-full bg-[#0071e3] text-white flex items-center justify-center shadow-lg"><i data-lucide="plus" class="w-5 h-5"></i></span>
+							<i data-lucide="wallet" class="w-5 h-5"></i><i data-lucide="calendar" class="w-5 h-5"></i>
+							<span class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full bg-black/80" aria-hidden="true"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+{* ================= QUOTE ================= *}
+<section class="max-w-4xl mx-auto px-5 pt-28 sm:pt-40 text-center" data-reveal>
+	<svg class="w-10 h-10 mx-auto text-accent/40" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 17q-2 0-3-1.5T3 12q0-3 2-5.5T10 3l1 1.5Q9 6 8 7.5T7 10q2 0 3 1.2t1 2.8q0 1.5-1.1 2.3T7 17m10 0q-2 0-3-1.5T13 12q0-3 2-5.5T20 3l1 1.5q-2 1.5-3 3T17 10q2 0 3 1.2t1 2.8q0 1.5-1.1 2.3T17 17"/></svg>
+	<p class="text-3xl sm:text-5xl font-semibold tracking-[-0.03em] leading-[1.15] mt-6">
+		Nejlepší aplikace je ta, na kterou <span class="text-shine">nemusíš myslet.</span>
+	</p>
+	<p class="text-muted mt-6">Proto Základna připomíná sama, počítá sama a zbytek nechává na tobě.</p>
+</section>
+
+{* ================= FAQ ================= *}
+<section id="faq" class="max-w-3xl mx-auto px-5 pt-28 sm:pt-40 scroll-mt-16">
+	<h2 class="text-4xl sm:text-5xl font-bold tracking-[-0.03em] text-center" data-reveal>Časté otázky</h2>
+	<div class="mt-12 border-t border-line" data-reveal="2">
+		{foreach $faqs as $q => $a}{include faq, q: $q, a: $a}{/foreach}
+	</div>
+</section>
+
+{* ================= FINAL CTA ================= *}
+<section class="max-w-6xl mx-auto px-5 pt-28 sm:pt-40">
+	<div class="relative overflow-hidden rounded-[2.25rem] ring-1 ring-line bg-surface px-6 py-20 sm:py-28 text-center" data-reveal>
+		<div class="aurora opacity-60" aria-hidden="true"><span></span><span></span><span></span></div>
+		<div class="relative">
+			{include '../../@logo.latte', size: 'w-16 h-16'}
+			<h2 class="text-4xl sm:text-6xl font-bold tracking-[-0.035em] mt-7">Dej svým věcem základnu.</h2>
+			<p class="text-lg text-muted mt-4">Za minutu máš hotovo. Zdarma.</p>
+			<a href="{$cta}" class="btn btn-primary btn-lg mt-9 shadow-lg shadow-blue-500/25">{$ctaLabel}<i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+		</div>
+	</div>
+</section>
+
+{* Landing-only behaviour: reveal on scroll, count-up numbers, palette typing demo *}
+<script>{syntax off}
+(function () {
+	var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	var fmt = function (v, dec) { return v.toLocaleString('cs-CZ', { minimumFractionDigits: dec, maximumFractionDigits: dec }); };
+
+	function countUp(el) {
+		var to = parseFloat(el.dataset.count), dec = parseInt(el.dataset.decimals || '0', 10);
+		var pre = el.dataset.prefix || '', suf = el.dataset.suffix || '';
+		if (reduce) { el.textContent = pre + fmt(to, dec) + suf; return; }
+		var t0 = null, dur = 1400;
+		function step(t) {
+			t0 = t0 || t;
+			var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+			el.textContent = pre + fmt(to * e, dec) + suf;
+			if (p < 1) requestAnimationFrame(step);
+		}
+		requestAnimationFrame(step);
+	}
+
+	if ('IntersectionObserver' in window) {
+		document.documentElement.classList.add('reveal-ready');
+		var io = new IntersectionObserver(function (entries) {
+			entries.forEach(function (en) {
+				if (!en.isIntersecting) return;
+				en.target.classList.add('in');
+				if (en.target.dataset.count) countUp(en.target);
+				io.unobserve(en.target);
+			});
+		}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+		document.querySelectorAll('[data-reveal], [data-count]').forEach(function (el) { io.observe(el); });
+	}
+
+	document.addEventListener('alpine:init', function () {
+		Alpine.data('typer', function () {
+			var demos = [
+				{ q: 'tank', r: ['Tankování · Octavia', 'Tankování · MX-5', 'Tankování · Shell, 43 l'] },
+				{ q: 'stk', r: ['STK · Octavia, za 9 dní', 'Servis · Octavia'] },
+				{ q: 'nák', r: ['Nákupní seznam', 'Nový výdaj', 'Albert nákup · −3 240 Kč'] },
+				{ q: 'dovol', r: ['Cíl · Dovolená, 72 %', 'Nový spořicí cíl'] }
+			];
+			return {
+				typed: '', results: [], i: 0,
+				init: function () {
+					var self = this;
+					if (reduce) { self.typed = demos[0].q; self.results = demos[0].r; return; }
+					var run = function () {
+						var d = demos[self.i % demos.length], n = 0;
+						self.results = [];
+						var tick = setInterval(function () {
+							n++;
+							self.typed = d.q.slice(0, n);
+							if (n >= d.q.length) {
+								clearInterval(tick);
+								self.results = d.r;
+								self.i++;
+								setTimeout(run, 2200);
+							}
+						}, 140);
+					};
+					run();
+				}
+			};
+		});
+	});
+})();
+{/syntax}</script>
+{/block}

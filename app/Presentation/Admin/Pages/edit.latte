@@ -1,0 +1,13 @@
+{block title}Upravit: {$page->title}{/block}
+
+{block content}
+<a n:href="default" class="btn btn-ghost -ml-3 mb-3 text-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i>Stránky</a>
+<h1 class="page-title mb-6">Upravit: {$page->title}</h1>
+<div n:if="$isLegal" class="max-w-4xl mb-5 rounded-2xl bg-accent/10 text-sm px-5 py-4 rise">
+	<div class="font-semibold text-accent flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i>Právní dokument</div>
+	<p class="mt-1 text-muted">Zobrazuje se na <a href="{$basePath}/{$page->slug}" target="_blank" class="text-accent">/{$page->slug}</a>. V textu můžeš použít <code class="kbd">{l}provozovatel{r}</code>, <code class="kbd">{l}email{r}</code> a <code class="kbd">{l}mesto{r}</code> — doplní se z konfigurace. Adresa (slug) se nemění. Když stránku smažeš nebo skryješ, použije se výchozí text.</p>
+</div>
+<div class="card p-6 sm:p-8 max-w-4xl rise">
+	{include _form.latte}
+</div>
+{/block}

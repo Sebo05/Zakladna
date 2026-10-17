@@ -144,6 +144,7 @@ html.dark {
 	.btn-danger { background: color-mix(in srgb, var(--neg) 12%, transparent); color: var(--neg); }
 	.btn-danger:hover { background: color-mix(in srgb, var(--neg) 18%, transparent); }
 	.btn-lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+	.btn-sm { padding: 0.3125rem 0.75rem; font-size: 0.8125rem; }
 	.btn-icon {
 		display: inline-flex;
 		align-items: center;
@@ -452,3 +453,31 @@ html.dark .aurora > span { opacity: 0.32; }
 	.page-loader::before { display: none; }
 	.page-loader b, .page-loader i { animation: none; }
 }
+
+/* ===== Confirm dialog (data-confirm) ===== */
+.confirm-dialog {
+	margin: auto; padding: 0; border: 0; width: min(24rem, calc(100vw - 2rem));
+	border-radius: 1.5rem; background: var(--surface); color: var(--ink);
+	box-shadow: 0 24px 60px -12px rgb(0 0 0 / .35), 0 0 0 1px var(--line);
+}
+.confirm-dialog[open] { animation: cd-in .22s cubic-bezier(.2,.9,.3,1.2); }
+.confirm-dialog::backdrop { background: rgb(0 0 0 / .35); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: cd-fade .2s ease; }
+.confirm-dialog form { padding: 1.75rem 1.5rem 1.25rem; text-align: center; }
+.confirm-icon {
+	width: 3rem; height: 3rem; margin: 0 auto 1rem; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+	background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent);
+}
+.confirm-icon.danger { background: color-mix(in srgb, var(--neg) 12%, transparent); color: var(--neg); }
+.confirm-icon svg { width: 1.4rem; height: 1.4rem; }
+.confirm-text { font-size: 0.975rem; line-height: 1.5; }
+.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1.5rem; }
+.confirm-actions .btn { padding-top: 0.65rem; padding-bottom: 0.65rem; }
+.btn-danger-solid { background: var(--neg); color: #fff; }
+.btn-danger-solid:hover { filter: brightness(1.08); }
+@keyframes cd-in { from { opacity: 0; transform: scale(.94) translateY(8px); } }
+@keyframes cd-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .confirm-dialog[open], .confirm-dialog::backdrop { animation: none; } }
+
+/* legal docs: wide tables scroll inside, never the page */
+.prose.legal table { display: block; overflow-x: auto; }
+.prose.legal th, .prose.legal td { min-width: 9rem; }

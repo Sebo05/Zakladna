@@ -1,0 +1,178 @@
+{import '../@components.latte'}
+{block title}Banka{/block}
+
+{block content}
+{include formHeader, title: 'Banka', back: $presenter->link('Finance:default'), backLabel: 'Finance', sub: 'Pohyby z účtu se samy stáhnou do Financí — žádné ruční opisování.'}
+
+{if $accounts}
+	<div class="space-y-3 mb-8 rise rise-2">
+		<div n:foreach="$accounts as $a" class="card p-5 flex flex-wrap items-center gap-4">
+			<span n:class="'tile w-11 h-11 rounded-xl', $a->bank === 'fio' ? 'bg-pos/12 text-pos' : 'bg-accent/12 text-accent'"><i data-lucide="landmark"></i></span>
+			<div class="flex-1 min-w-48">
+				<div class="font-semibold">{$a->name} <span class="text-muted font-normal text-sm">· {App\Model\Bank\BankAccount::BANKS[$a->bank]}{if $a->sandbox} · sandbox{/if}</span></div>
+				<div class="text-xs mt-0.5">
+					{if $a->lastError}
+						<span class="text-neg">{$a->lastError}</span>
+					{elseif !$a->isConnected()}
+						<span class="text-warn">Nepřipojeno — dokonči přihlášení v bance.</span>
+					{elseif $a->lastSyncAt}
+						<span class="text-muted">Naposledy staženo {$a->lastSyncAt|date:'j. n. Y H:i'}</span>
+					{else}
+						<span class="text-muted">Zatím nestaženo</span>
+					{/if}
+				</div>
+			</div>
+			<div class="flex gap-2">
+				<a n:if="$a->usesOAuth()" n:href="connect, id: $a->id" class="btn btn-secondary btn-sm"><i data-lucide="link" class="w-4 h-4"></i>{$a->isConnected() ? 'Připojit znovu' : 'Připojit'}</a>
+				<a n:if="$a->isConnected()" n:href="sync!, id: $a->id" class="btn btn-primary btn-sm"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Stáhnout</a>
+				<a n:href="delete, id: $a->id" class="btn-icon hover:text-neg" title="Odpojit" data-confirm="Odpojit {$a->name}? Importované transakce zůstanou."><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+			</div>
+		</div>
+		<p n:if="$uncategorized" class="text-sm text-muted px-1">
+			<i data-lucide="tag" class="w-4 h-4 inline -mt-0.5"></i>
+			{$uncategorized}× „Nezařazeno“ — dej jim kategorii ve <a n:href="Finance:default" class="text-accent">Financích</a>. Příště se stejný protiúčet zařadí sám.
+		</p>
+	</div>
+{/if}
+
+<div class="grid lg:grid-cols-2 gap-5 items-start" x-data="{ open: {$accounts ? 'null' : '\'fio\''} }">
+	{* Fio *}
+	<section class="card p-6 rise rise-3">
+		<button type="button" class="w-full flex items-center gap-3 text-left" @click="open = open === 'fio' ? null : 'fio'">
+			<span class="tile bg-pos/12 text-pos"><i data-lucide="plus"></i></span>
+			<div class="flex-1"><h2 class="section-title">Připojit Fio banku</h2><p class="text-xs text-muted">Zdarma, stačí token z internetbankingu.</p></div>
+			<i data-lucide="chevron-right" class="w-5 h-5 text-faint transition" :class="open === 'fio' && 'rotate-90'"></i>
+		</button>
+		<div x-show="open === 'fio'" x-cloak class="pt-5">
+			<ol class="text-sm text-muted list-decimal pl-5 space-y-1 mb-5">
+				<li>Internetbanking Fio → <b>Nastavení → API</b> → <b>Přidat nový token</b>.</li>
+				<li>Oprávnění stačí <b>Pouze sledovat účet</b> (nic nejde odeslat).</li>
+				<li>Token (64 znaků) zkopíruj sem. Uloží se zašifrovaně.</li>
+			</ol>
+			{form fioForm, class: 'space-y-4'}
+				{include formErrors, form: $form}
+				{include field, form: $form, name: 'name'}
+				{include field, form: $form, name: 'token'}
+				{input send, class: 'btn btn-primary'}
+			{/form}
+			<p class="text-xs text-faint mt-4">Poprvé se stáhne posledních 89 dní (starší historie u Fio vyžaduje dodatečné ověření v IB). Fio povoluje jeden dotaz za 30 s.</p>
+		</div>
+	</section>
+
+	{* Česká spořitelna *}
+	<section class="card p-6 rise rise-4">
+		<button type="button" class="w-full flex items-center gap-3 text-left" @click="open = open === 'cs' ? null : 'cs'">
+			<span class="tile bg-accent/12 text-accent"><i data-lucide="plus"></i></span>
+			<div class="flex-1"><h2 class="section-title">Připojit Českou spořitelnu</h2><p class="text-xs text-muted">Přes Erste Developer Portal (OAuth).</p></div>
+			<i data-lucide="chevron-right" class="w-5 h-5 text-faint transition" :class="open === 'cs' && 'rotate-90'"></i>
+		</button>
+		<div x-show="open === 'cs'" x-cloak class="pt-5">
+			<ol class="text-sm text-muted list-decimal pl-5 space-y-1 mb-5">
+				<li>Zaregistruj aplikaci na <a href="https://developers.erstegroup.com" target="_blank" rel="noopener" class="text-accent">developers.erstegroup.com</a> (produkt <b>Accounts API</b>).</li>
+				<li>Jako redirect URI zadej: <code class="kbd break-all">{$callbackUrl}</code></li>
+				<li>Opiš sem <b>client_id</b>, <b>client_secret</b> a <b>WEB-API-key</b>, pak tě pošlu do banky povolit přístup.</li>
+			</ol>
+			{include oauthFields, form: csForm}
+			<p class="text-xs text-faint mt-4">Přístup platí max. 90 dní, pak tě aplikace požádá o nové připojení.</p>
+		</div>
+	</section>
+
+	<p class="lg:col-span-2 text-sm text-muted px-1 pt-2 rise rise-4">
+		<i data-lucide="info" class="w-4 h-4 inline -mt-0.5"></i>
+		KB, ČSOB a Raiffeisenbank nabízejí API hlavně pro <b>firemní a podnikatelské účty</b> (registrace vývojářské aplikace, u ČSOB/RB smlouva a certifikát). K běžnému osobnímu účtu ho banka nemusí zpřístupnit — pak zbývá ruční zadávání.
+	</p>
+
+	{* Komerční banka *}
+	<section class="card p-6 rise rise-4">
+		<button type="button" class="w-full flex items-center gap-3 text-left" @click="open = open === 'kb' ? null : 'kb'">
+			<span class="tile bg-accent/12 text-accent"><i data-lucide="plus"></i></span>
+			<div class="flex-1"><h2 class="section-title">Připojit Komerční banku</h2><p class="text-xs text-muted">Přes KB API portál (OAuth).</p></div>
+			<i data-lucide="chevron-right" class="w-5 h-5 text-faint transition" :class="open === 'kb' && 'rotate-90'"></i>
+		</button>
+		<div x-show="open === 'kb'" x-cloak class="pt-5">
+			<ol class="text-sm text-muted list-decimal pl-5 space-y-1 mb-5">
+				<li>Zaregistruj aplikaci na <a href="https://www.kb.cz/cs/kbapi" target="_blank" rel="noopener" class="text-accent">KB API portálu</a> (API <b>Account Direct Access</b>).</li>
+				<li>Jako redirect URI zadej: <code class="kbd break-all">{$callbackUrl}</code></li>
+				<li>Opiš sem <b>client_id</b>, <b>client_secret</b> a <b>apiKey</b>, pak tě pošlu do KB povolit přístup.</li>
+			</ol>
+			{include oauthFields, form: kbForm}
+			<p class="text-xs text-faint mt-4">KB povoluje stažení historie jednou za 61 minut.</p>
+		</div>
+	</section>
+
+	{* ČSOB *}
+	<section class="card p-6 rise rise-4">
+		<button type="button" class="w-full flex items-center gap-3 text-left" @click="open = open === 'csob' ? null : 'csob'">
+			<span class="tile bg-accent/12 text-accent"><i data-lucide="plus"></i></span>
+			<div class="flex-1"><h2 class="section-title">Připojit ČSOB</h2><p class="text-xs text-muted">CEB Business Connector, klientský certifikát.</p></div>
+			<i data-lucide="chevron-right" class="w-5 h-5 text-faint transition" :class="open === 'csob' && 'rotate-90'"></i>
+		</button>
+		<div x-show="open === 'csob'" x-cloak class="pt-5">
+			<ol class="text-sm text-muted list-decimal pl-5 space-y-1 mb-5">
+				<li>V ČSOB CEB aktivuj službu <b>Business Connector</b> — dostaneš číslo smlouvy a klientský certifikát.</li>
+				<li>V CEB zapni výpisy ve formátu <b>GPC/ABO</b> (BBGPC).</li>
+				<li>Nahraj sem certifikát (.p12/.pfx/.pem) s heslem. Uloží se mimo web, heslo zašifrovaně.</li>
+			</ol>
+			{form csobForm, class: 'space-y-4'}
+				{include formErrors, form: $form}
+				{include field, form: $form, name: 'name'}
+				<div class="grid sm:grid-cols-2 gap-4">
+					{include field, form: $form, name: 'clientId'}
+					{include field, form: $form, name: 'accountRef', hint: 'Jen když výpis obsahuje víc účtů.'}
+				</div>
+				{include certFields, form: $form}
+			{/form}
+			<p class="text-xs text-faint mt-4">Pohyby jsou ve výpisu až další den (D+1). Stahovat lze jednou za 30 minut.</p>
+		</div>
+	</section>
+
+	{* Raiffeisenbank *}
+	<section class="card p-6 rise rise-4">
+		<button type="button" class="w-full flex items-center gap-3 text-left" @click="open = open === 'rb' ? null : 'rb'">
+			<span class="tile bg-accent/12 text-accent"><i data-lucide="plus"></i></span>
+			<div class="flex-1"><h2 class="section-title">Připojit Raiffeisenbank</h2><p class="text-xs text-muted">Premium API, klientský certifikát.</p></div>
+			<i data-lucide="chevron-right" class="w-5 h-5 text-faint transition" :class="open === 'rb' && 'rotate-90'"></i>
+		</button>
+		<div x-show="open === 'rb'" x-cloak class="pt-5">
+			<ol class="text-sm text-muted list-decimal pl-5 space-y-1 mb-5">
+				<li>Zaregistruj aplikaci na <a href="https://developers.rb.cz/premium" target="_blank" rel="noopener" class="text-accent">developers.rb.cz</a> — dostaneš <b>Client ID</b>.</li>
+				<li>V internetovém bankovnictví vygeneruj certifikát pro <b>Premium API</b> (.p12) a povol mu účet.</li>
+				<li>Vyplň číslo účtu (bez kódu banky) a nahraj certifikát s heslem.</li>
+			</ol>
+			{form rbForm, class: 'space-y-4'}
+				{include formErrors, form: $form}
+				{include field, form: $form, name: 'name'}
+				<div class="grid sm:grid-cols-2 gap-4">
+					{include field, form: $form, name: 'clientId'}
+					{include field, form: $form, name: 'accountRef'}
+				</div>
+				{include certFields, form: $form}
+			{/form}
+			<p class="text-xs text-faint mt-4">Historie max. 90 dní zpět.</p>
+		</div>
+	</section>
+</div>
+{/block}
+
+{define oauthFields, string $form}
+	{form $form, class: 'space-y-4'}
+		{include formErrors, form: $form}
+		{include field, form: $form, name: 'name'}
+		<div class="grid sm:grid-cols-2 gap-4">
+			{include field, form: $form, name: 'clientId'}
+			{include field, form: $form, name: 'clientSecret'}
+		</div>
+		{include field, form: $form, name: 'apiKey'}
+		<div class="text-sm [&_input]:mr-2">{input sandbox}</div>
+		{input send, class: 'btn btn-primary'}
+	{/form}
+{/define}
+
+{define certFields, $form}
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'cert'}
+		{include field, form: $form, name: 'certPassword'}
+	</div>
+	<div class="text-sm [&_input]:mr-2">{input sandbox}</div>
+	{input send, class: 'btn btn-primary'}
+{/define}

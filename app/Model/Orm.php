@@ -22,6 +22,8 @@ use App\Model\Household\HouseholdExpenseSharesRepository;
 use App\Model\Household\HouseholdSettlementsRepository;
 use App\Model\Household\HouseholdItemsRepository;
 use App\Model\Household\HouseholdBudgetsRepository;
+use App\Model\Recurring\RecurringTransactionsRepository;
+use App\Model\Bank\BankAccountsRepository;
 
 
 /**
@@ -44,6 +46,8 @@ use App\Model\Household\HouseholdBudgetsRepository;
  * @property-read HouseholdSettlementsRepository $householdSettlements
  * @property-read HouseholdItemsRepository $householdItems
  * @property-read HouseholdBudgetsRepository $householdBudgets
+ * @property-read RecurringTransactionsRepository $recurringTransactions
+ * @property-read BankAccountsRepository $bankAccounts
  */
 final class Orm extends Model
 {

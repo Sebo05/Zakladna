@@ -14,6 +14,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -213,6 +214,7 @@ class WidgetForm : Form
 		timer.Tick += delegate { Reload(); };
 		timer.Start();
 		Reload();
+		if (Get("token_dpapi") == "" && Get("password_dpapi") == "") Login(); // first run → straight to the browser
 	}
 
 	int S(float v) { return (int) Math.Round(v * scale); }
@@ -376,6 +378,7 @@ class WidgetForm : Form
 		menu.Items.Add(new ToolStripSeparator());
 		menu.Items.Add("Obnovit", null, delegate { Reload(); });
 		menu.Items.Add("Otevřít aplikaci", null, delegate { OpenApp(); });
+		menu.Items.Add("Přihlásit jiný účet…", null, delegate { Login(); });
 		menu.Items.Add(new ToolStripSeparator());
 		menu.Items.Add("Konec", null, delegate { Close(); });
 		ContextMenuStrip = menu;
@@ -451,7 +454,8 @@ class WidgetForm : Form
 	protected override void OnMouseDoubleClick(MouseEventArgs e)
 	{
 		base.OnMouseDoubleClick(e);
-		if (hover < 0) OpenApp();
+		if (hover >= 0) return;
+		if (error == LoginHint) Login(); else OpenApp();
 	}
 
 	void OpenApp()
@@ -474,9 +478,16 @@ class WidgetForm : Form
 			updated = DateTime.Now;
 		} catch (WebException ex) {
 			var resp = ex.Response as HttpWebResponse;
-			error = resp != null && resp.StatusCode == HttpStatusCode.Unauthorized
-				? "Špatný e-mail nebo heslo ve widget.ini"
-				: "Server je nedostupný";
+			if (resp != null && resp.StatusCode == HttpStatusCode.Unauthorized) {
+				cfg.Remove("token_dpapi"); // revoked in the profile → sign in again
+				cfg.Remove("password_dpapi");
+				SaveIni();
+				error = LoginHint;
+			} else {
+				error = "Server je nedostupný";
+			}
+		} catch (UnauthorizedAccessException) {
+			error = LoginHint;
 		} catch (Exception ex) {
 			error = ex.Message;
 		}
@@ -484,16 +495,96 @@ class WidgetForm : Form
 		Relayout();
 	}
 
+	const string LoginHint = "Dvojklikem se přihlas v prohlížeči";
+
 	string Fetch()
 	{
-		string pass = Encoding.UTF8.GetString(ProtectedData.Unprotect(
-			Convert.FromBase64String(Get("password_dpapi")), null, DataProtectionScope.CurrentUser));
 		using (var wc = new WebClient()) {
 			wc.Encoding = Encoding.UTF8;
-			wc.Headers[HttpRequestHeader.Authorization] = "Basic " +
-				Convert.ToBase64String(Encoding.UTF8.GetBytes(Get("email") + ":" + pass));
+			if (Get("token_dpapi") != "") {
+				wc.Headers[HttpRequestHeader.Authorization] = "Bearer " + Unprotect(Get("token_dpapi"));
+			} else if (Get("password_dpapi") != "") { // older widget.ini with e-mail + password
+				wc.Headers[HttpRequestHeader.Authorization] = "Basic " +
+					Convert.ToBase64String(Encoding.UTF8.GetBytes(Get("email") + ":" + Unprotect(Get("password_dpapi"))));
+			} else {
+				throw new UnauthorizedAccessException();
+			}
 			return wc.DownloadString(Get("url").TrimEnd('/') + "/api/widget");
 		}
+	}
+
+	static string Unprotect(string b64)
+	{
+		return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(b64), null, DataProtectionScope.CurrentUser));
+	}
+
+	// Sign-in in the browser (RFC 8252 loopback): listen on 127.0.0.1:<random port>, open /app/widget?port&state,
+	// the web app redirects back to us with ?state&token after the user clicks "Povolit".
+	bool signingIn;
+
+	async void Login()
+	{
+		if (signingIn) return;
+		signingIn = true;
+		var listener = new TcpListener(IPAddress.Loopback, 0);
+		try {
+			listener.Start();
+			int port = ((IPEndPoint) listener.LocalEndpoint).Port;
+			var rnd = new byte[16];
+			using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(rnd);
+			string state = BitConverter.ToString(rnd).Replace("-", "");
+			error = "Dokonči přihlášení v prohlížeči…";
+			Relayout();
+			Process.Start(Get("url").TrimEnd('/') + "/app/widget/?port=" + port + "&state=" + state);
+
+			string token = null;
+			var deadline = DateTime.Now.AddMinutes(10);
+			while (token == null && DateTime.Now < deadline) {
+				var accept = listener.AcceptTcpClientAsync();
+				if (await Task.WhenAny(accept, Task.Delay(deadline - DateTime.Now)) != accept) break;
+				using (var client = accept.Result)
+				using (var stream = client.GetStream()) {
+					string line = new StreamReader(stream, Encoding.ASCII).ReadLine() ?? ""; // GET /?state=..&token=.. HTTP/1.1
+					var q = Query(line);
+					bool ok = q.ContainsKey("state") && q["state"] == state && q.ContainsKey("token");
+					if (ok) token = q["token"];
+					string html = "<!doctype html><meta charset=utf-8><title>Základna</title><body style=\"font:16px system-ui;text-align:center;padding:15vh 1rem\">"
+						+ (ok ? "<h1>Widget je připojený ✓</h1><p>Okno můžeš zavřít.</p>" : "<h1>Neplatný požadavek</h1>") + "</body>";
+					byte[] body = Encoding.UTF8.GetBytes(html);
+					byte[] head = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: " + body.Length + "\r\nConnection: close\r\n\r\n");
+					stream.Write(head, 0, head.Length);
+					stream.Write(body, 0, body.Length);
+				}
+			}
+			if (token == null) {
+				error = LoginHint;
+				Relayout();
+				return;
+			}
+			cfg["token_dpapi"] = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(token), null, DataProtectionScope.CurrentUser));
+			cfg.Remove("password_dpapi");
+			cfg.Remove("email");
+			SaveIni();
+			Reload();
+		} catch (Exception ex) {
+			error = ex.Message;
+			Relayout();
+		} finally {
+			listener.Stop();
+			signingIn = false;
+		}
+	}
+
+	static Dictionary<string, string> Query(string requestLine)
+	{
+		var d = new Dictionary<string, string>();
+		var parts = requestLine.Split(' ');
+		if (parts.Length < 2 || parts[1].IndexOf('?') < 0) return d;
+		foreach (var pair in parts[1].Substring(parts[1].IndexOf('?') + 1).Split('&')) {
+			int i = pair.IndexOf('=');
+			if (i > 0) d[Uri.UnescapeDataString(pair.Substring(0, i))] = Uri.UnescapeDataString(pair.Substring(i + 1).Replace('+', ' '));
+		}
+		return d;
 	}
 
 	void Parse(Dictionary<string, object> d)
@@ -752,11 +843,33 @@ static class Program
 		Native.SetProcessDPIAware();
 		ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 		string ini = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "widget.ini");
-		if (!File.Exists(ini)) {
-			MessageBox.Show("Chybí widget.ini vedle AnoWidget.exe (vzor: widget.ini.example).", "Ano widget");
-			return;
-		}
 		Application.EnableVisualStyles();
+		if (!File.Exists(ini)) {
+			string url = AskUrl();
+			if (url == null) return;
+			File.WriteAllText(ini, "url=" + url + "\r\ntopmost=1\r\nlocked=0\r\nopacity=100\r\n", new UTF8Encoding(false));
+		}
 		Application.Run(new WidgetForm(ini));
+	}
+
+	// First run without widget.ini: the only thing we need is the address of the web app.
+	static string AskUrl()
+	{
+		var f = new Form { Text = "Ano widget", FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false,
+			StartPosition = FormStartPosition.CenterScreen, ClientSize = new Size(420, 130), Font = new Font("Segoe UI", 9f) };
+		var label = new Label { Text = "Adresa Základny (najdeš ji v profilu v aplikaci):", Left = 12, Top = 14, Width = 396 };
+		var box = new TextBox { Text = "https://", Left = 12, Top = 40, Width = 396 };
+		var ok = new Button { Text = "Pokračovat", Left = 228, Top = 84, Width = 90, DialogResult = DialogResult.OK };
+		var cancel = new Button { Text = "Zrušit", Left = 318, Top = 84, Width = 90, DialogResult = DialogResult.Cancel };
+		f.Controls.AddRange(new Control[] { label, box, ok, cancel });
+		f.AcceptButton = ok;
+		f.CancelButton = cancel;
+		while (f.ShowDialog() == DialogResult.OK) {
+			string url = box.Text.Trim().TrimEnd('/');
+			Uri u;
+			if (Uri.TryCreate(url, UriKind.Absolute, out u) && (u.Scheme == "http" || u.Scheme == "https")) return url;
+			MessageBox.Show("Zadej celou adresu, třeba https://zakladna.cz", "Ano widget");
+		}
+		return null;
 	}
 }

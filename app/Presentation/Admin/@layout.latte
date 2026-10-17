@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>{ifset title}{include title|stripHtml} · {/ifset}Administrace · Základna</title>
+	<meta name="robots" content="noindex">
+	{include '../@head.latte'}
+</head>
+
+{if $user->isLoggedIn() && $user->isInRole('admin')}
+<body class="bg-canvas text-ink font-sans antialiased">
+
+{define navLink, $dest, $label, $icon}
+	<a href="{plink str_replace('*', 'default', $dest)}" n:class="'nav-link', $presenter->isLinkCurrent($dest) ? 'active'">
+		<i data-lucide="{$icon}"></i>{$label}
+	</a>
+{/define}
+
+{define nav}
+	<nav class="space-y-0.5">
+		{include navLink, dest: ':Admin:Dashboard:default', label: 'Přehled', icon: 'chart-column'}
+		{include navLink, dest: ':Admin:Users:*', label: 'Uživatelé', icon: 'user'}
+		{include navLink, dest: ':Admin:Households:*', label: 'Domácnosti', icon: 'house-plus'}
+	</nav>
+	<div class="eyebrow px-3 mt-6 mb-1.5">Obsah webu</div>
+	<nav class="space-y-0.5">
+		{include navLink, dest: ':Admin:Pages:*', label: 'Stránky', icon: 'file-text'}
+		{include navLink, dest: ':Admin:Menu:*', label: 'Menu', icon: 'list-checks'}
+		<a n:href=":Frontend:Home:default" class="nav-link" target="_blank"><i data-lucide="arrow-up-right"></i>Zobrazit web</a>
+	</nav>
+{/define}
+
+{var $adminName = $user->getIdentity()?->getData()['name'] ?? 'Admin'}
+
+<div class="min-h-screen lg:flex" x-data="{ drawer: false }">
+	{* Sidebar — desktop, drawer on mobile *}
+	<div x-show="drawer" x-cloak x-transition.opacity class="lg:hidden fixed inset-0 z-40 bg-black/30" @click="drawer = false"></div>
+	<aside :style="drawer && { translate: 'none' }"
+		class="fixed lg:sticky top-0 left-0 z-50 h-screen w-64 shrink-0 flex flex-col px-4 py-6 border-r border-line bg-canvas max-lg:-translate-x-full transition-transform">
+		<a n:href=":Admin:Dashboard:default" class="flex items-center gap-2.5 px-2 mb-6">
+			{include '../@logo.latte'}
+			<span class="text-[17px] font-semibold tracking-tight">Základna</span>
+			<span class="badge badge-accent ml-auto">Admin</span>
+		</a>
+
+		{include nav}
+
+		<div class="mt-auto space-y-0.5">
+			<button type="button" onclick="toggleTheme()" class="nav-link w-full">
+				<i data-lucide="moon" class="dark:hidden!"></i><i data-lucide="sun" class="hidden! dark:block!"></i>
+				<span class="dark:hidden">Tmavý režim</span><span class="hidden dark:inline">Světlý režim</span>
+			</button>
+			<div class="flex items-center gap-3 px-3 py-3 mt-2 rounded-xl bg-surface-2">
+				<span class="w-8 h-8 rounded-full bg-linear-to-br from-violet-500 to-fuchsia-500 text-white text-sm font-semibold flex items-center justify-center shrink-0">{$adminName|substr:0,1|upper}</span>
+				<div class="min-w-0 flex-1">
+					<div class="text-sm font-medium truncate">{$adminName}</div>
+					<div class="text-xs text-muted">Administrátor</div>
+				</div>
+				<a n:href=":Admin:Sign:out" class="btn-icon" title="Odhlásit"><i data-lucide="log-out" class="w-4 h-4"></i></a>
+			</div>
+		</div>
+	</aside>
+
+	<div class="flex-1 min-w-0">
+		{* Top bar — mobile *}
+		<header class="lg:hidden sticky top-0 z-30 glass border-b border-line px-4 h-14 flex items-center justify-between">
+			<button type="button" @click="drawer = true" class="btn-icon" title="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
+			<a n:href=":Admin:Dashboard:default" class="flex items-center gap-2">
+				{include '../@logo.latte', size: 'w-7 h-7'}
+				<span class="font-semibold tracking-tight">Administrace</span>
+			</a>
+			<button type="button" onclick="toggleTheme()" class="btn-icon" title="Režim"><i data-lucide="moon" class="w-5 h-5 dark:hidden!"></i><i data-lucide="sun" class="w-5 h-5 hidden! dark:block!"></i></button>
+		</header>
+
+		<main class="px-4 sm:px-6 lg:px-10 py-6 lg:py-10 max-w-7xl mx-auto">
+			{include content}
+		</main>
+	</div>
+</div>
+
+{include '../@flashes.latte'}
+</body>
+
+{else}
+{* Sign-in page — its template still uses the old slate classes (dark retrofit via .legacy) *}
+<body class="legacy bg-canvas text-ink font-sans antialiased">
+	{include '../@flashes.latte'}
+	{include content}
+</body>
+{/if}
+</html>

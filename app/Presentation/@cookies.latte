@@ -1,0 +1,91 @@
+{* Cookie bar — layout & behaviour after the Bronze CMS CookieBar (bar → "Nastavení" accordion with categories → save),
+   categories kept here in code. Choice in localStorage 'cookie-consent' (see Alpine.data('cookieConsent') in main.js).
+   Only categories with 'used' => true are switchable; the rest are listed as "Nepoužíváme" so the structure is ready.
+   $tabBar = true → on mobile sits above the fixed App tab bar. z-40: above tab bar (z-30), below palette (z-50) and flashes (z-[60]).
+   Reopen from anywhere: dispatch window event 'cookie-settings'. *}
+{var $cookieCategories = [
+	'necessary' => [
+		'label' => 'Nezbytné',
+		'used' => true,
+		'text' => 'Bez nich nefunguje přihlášení a zabezpečení formulářů. Jsou vždy zapnuté a nelze je vypnout.',
+		'items' => [
+			['name' => 'PHPSESSID', 'type' => 'cookie', 'expire' => 'do zavření prohlížeče, s „Zapamatovat si mě“ až 14 dní'],
+			['name' => '_nss', 'type' => 'cookie', 'expire' => 'do zavření prohlížeče'],
+			['name' => 'theme', 'type' => 'local storage', 'expire' => 'dokud ho nesmažeš'],
+			['name' => 'cookie-consent', 'type' => 'local storage', 'expire' => 'dokud ho nesmažeš'],
+		],
+	],
+	'functional' => ['label' => 'Funkční', 'used' => false, 'text' => 'Pokročilejší funkce a zapamatování preferencí nad rámec nezbytného.', 'items' => []],
+	'analytics' => ['label' => 'Analytické', 'used' => false, 'text' => 'Měření návštěvnosti a chování na webu.', 'items' => []],
+	'marketing' => ['label' => 'Marketingové', 'used' => false, 'text' => 'Personalizovaná reklama a sledování napříč weby.', 'items' => []],
+]}
+{var $optional = array_keys(array_filter(array_slice($cookieCategories, 1), fn($c) => $c['used']))}{* first = necessary *}
+<div x-data="cookieConsent({json_encode($optional)})" x-show="show" x-cloak @cookie-settings.window="open()" @keydown.escape.window="esc()"
+	x-transition:enter="transition duration-300 ease-out" x-transition:enter-start="opacity-0 translate-y-4"
+	x-transition:leave="transition duration-200" x-transition:leave-end="opacity-0 translate-y-4"
+	n:class="'fixed z-40 inset-x-4 sm:inset-x-auto sm:left-6 sm:w-[26rem] card ring-1 ring-line flex flex-col', $tabBar ?? false
+		? 'bottom-[calc(6.5rem+env(safe-area-inset-bottom))] lg:bottom-6 max-h-[calc(100dvh-8.5rem)] lg:max-h-[calc(100dvh-3rem)]'
+		: 'bottom-[max(1rem,env(safe-area-inset-bottom))] sm:bottom-6 max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)]'"
+	style="box-shadow: var(--shadow-lg)" role="region" aria-labelledby="cookie-bar-title" x-ref="panel" tabindex="-1">
+
+	<div class="overflow-y-auto overscroll-contain p-5 pb-4">
+		<div class="flex items-start gap-3">
+			<span class="w-9 h-9 shrink-0 rounded-full bg-accent/10 text-accent flex items-center justify-center" aria-hidden="true"><i data-lucide="cookie" class="w-5 h-5"></i></span>
+			<div class="min-w-0">
+				<h2 id="cookie-bar-title" class="font-semibold">Používáme jen nezbytné cookies</h2>
+				<p class="mt-1 text-sm text-muted">Slouží k přihlášení a zabezpečení. Žádné sledování, analytiku ani reklamy. Podrobnosti najdeš v <a n:href=":Frontend:Legal:cookies" class="text-accent hover:underline">zásadách cookies</a>.</p>
+			</div>
+		</div>
+
+		{* Settings — categories accordion (Bronze "second-step") *}
+		<div x-show="settings" id="cookie-settings" class="mt-4 space-y-2">
+			<div n:foreach="$cookieCategories as $key => $cat" x-data="{ more: false }" class="rounded-2xl bg-surface-2 px-3.5 py-3">
+				<div class="flex items-center gap-3">
+					<button type="button" @click="more = !more" :aria-expanded="more" aria-controls="cookie-cat-{$key}" class="flex-1 min-w-0 flex items-center gap-2 text-left text-sm font-semibold">
+						<i data-lucide="chevron-right" class="w-4 h-4 text-muted shrink-0 transition-transform" :class="more && 'rotate-90'"></i>
+						<span class="truncate">{$cat['label']}</span>
+						<span n:if="$cat['items']" class="text-faint font-normal">{count($cat['items'])}</span>
+						<span n:if="!$cat['used']" class="badge badge-muted font-normal">Nepoužíváme</span>
+					</button>
+					{if $key === 'necessary'}
+						<span role="switch" aria-checked="true" aria-disabled="true" aria-label="{$cat['label']} – vždy zapnuté" class="relative inline-flex h-7 w-12 shrink-0 rounded-full bg-pos opacity-60">
+							<span class="absolute top-0.5 left-5.5 h-6 w-6 rounded-full bg-white shadow"></span>
+						</span>
+					{elseif $cat['used']}
+						<button type="button" role="switch" :aria-checked="choice.{$key}" aria-label="{$cat['label']}" @click="choice.{$key} = !choice.{$key}"
+							class="relative inline-flex h-7 w-12 shrink-0 rounded-full transition" :class="choice.{$key} ? 'bg-pos' : 'bg-line'">
+							<span class="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all" :class="choice.{$key} ? 'left-5.5' : 'left-0.5'"></span>
+						</button>
+					{else}
+						<span role="switch" aria-checked="false" aria-disabled="true" aria-label="{$cat['label']} – nepoužíváme" class="relative inline-flex h-7 w-12 shrink-0 rounded-full bg-line opacity-60">
+							<span class="absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow"></span>
+						</span>
+					{/if}
+				</div>
+				<div x-show="more" id="cookie-cat-{$key}" class="mt-2 pl-6 text-sm text-muted">
+					<p>{$cat['text']}</p>
+					<dl n:if="$cat['items']" class="mt-2 divide-y divide-line">
+						<div n:foreach="$cat['items'] as $item" class="py-2">
+							<dt class="font-mono text-xs text-ink">{$item['name']}</dt>
+							<dd class="text-xs">{$item['type']} · {$item['expire']}</dd>
+						</div>
+					</dl>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{* Actions (Bronze "right-box") — accept/reject only make sense once an optional category is in use *}
+	<div class="flex flex-wrap items-center gap-2 px-5 pb-5">
+		{if $optional}
+			<button type="button" class="btn btn-primary btn-sm" @click="save(true)">Přijmout vše</button>
+			<button type="button" class="btn btn-secondary btn-sm" @click="save(false)">Odmítnout</button>
+			<button type="button" x-show="settings" class="btn btn-secondary btn-sm" @click="save()">Uložit výběr</button>
+		{else}
+			<button type="button" class="btn btn-primary btn-sm" @click="save()">Rozumím</button>
+		{/if}
+		<button type="button" class="btn btn-ghost btn-sm ml-auto" @click="settings = !settings" :aria-expanded="settings" aria-controls="cookie-settings">
+			<i data-lucide="sliders-horizontal" class="w-4 h-4"></i><span x-text="settings ? 'Skrýt nastavení' : 'Nastavení'">Nastavení</span>
+		</button>
+	</div>
+</div>

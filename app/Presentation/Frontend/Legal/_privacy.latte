@@ -1,0 +1,53 @@
+<h2>1. Správce</h2>
+<p>Správcem osobních údajů je {$operator['name']}{if $operator['city']}, {$operator['city']}{/if}, e-mail <a href="mailto:{$operator['email']}">{$operator['email']}</a>. Na tento e-mail piš se všemi dotazy a žádostmi k osobním údajům. Pověřenec pro ochranu osobních údajů jmenován není (není povinný).</p>
+
+<h2>2. Jaké údaje zpracováváme</h2>
+<table>
+	<thead><tr><th>Údaje</th><th>Účel</th><th>Právní základ</th></tr></thead>
+	<tbody>
+		<tr><td>Jméno, e-mail, heslo (uložené jen jako bezpečný otisk — hash)</td><td>Vedení účtu, přihlášení</td><td>Plnění smlouvy (čl. 6 odst. 1 písm. b GDPR)</td></tr>
+		<tr><td>Obsah, který zadáš: auta a SPZ, doklady, servis, tankování, transakce, rozpočty, opakované platby, cíle, události, domácnost</td><td>Poskytování služby</td><td>Plnění smlouvy</td></tr>
+		<tr><td>Pohyby z bankovního účtu (datum, částka, protistrana, zpráva) a přístupový token banky (šifrovaně)</td><td>Import transakcí — jen pokud banku sám připojíš</td><td>Plnění smlouvy</td></tr>
+		<tr><td>Údaje pro e-mailová upozornění (co a kdy jsme ti poslali)</td><td>Upozornění na STK, události a platby; zabránění opakovanému odeslání</td><td>Plnění smlouvy; upozornění můžeš vypnout v profilu</td></tr>
+		<tr><td>Technické údaje: IP adresa, čas požadavku, prohlížeč, chybové záznamy, session cookie</td><td>Bezpečnost, ochrana proti zneužití, řešení chyb</td><td>Oprávněný zájem (čl. 6 odst. 1 písm. f GDPR)</td></tr>
+		<tr><td>Zálohy databáze</td><td>Obnova dat při výpadku nebo chybě</td><td>Oprávněný zájem</td></tr>
+	</tbody>
+</table>
+<p>Nezpracováváme zvláštní kategorie osobních údajů, neprovádíme profilování ani automatizované rozhodování a údaje nepoužíváme k marketingu.</p>
+
+<h2>3. Kdo k údajům má přístup</h2>
+<ul>
+	<li><b>Ty</b> — a v domácnosti i ostatní členové, ale jen u sdílených částí (společné výdaje, vyrovnání, úkoly, nákupy, společný rozpočet, sdílené cíle, tvé jméno).</li>
+	<li><b>Provozovatel</b> — v administraci vidí jen jméno, e-mail, datum registrace a <i>počty</i> záznamů. Částky, popisy transakcí ani další obsah administrace nezobrazuje. K samotné databázi přistupuje jen při údržbě nebo řešení chyby.</li>
+	<li><b>Zpracovatelé</b>, kteří pro nás zajišťují provoz: poskytovatel hostingu (servery v EU) a poskytovatel odesílání e-mailů. Zpracovávají údaje jen podle našich pokynů.</li>
+	<li><b>Bunny Fonts</b> (BunnyWay d.o.o., Slovinsko) — z jejich serveru se načítá písmo; vidí přitom IP adresu, nepoužívá cookies.</li>
+	<li><b>Tvoje banka</b> — jen pokud ji připojíš; komunikace probíhá přímo mezi službou a bankou.</li>
+</ul>
+<p>Údaje nepředáváme mimo EU/EHP, neprodáváme je a neposkytujeme reklamním sítím. Státním orgánům je vydáme jen tehdy, když to ukládá zákon.</p>
+
+<h2>4. Jak dlouho údaje uchováváme</h2>
+<ul>
+	<li>Údaje účtu a veškerý obsah: po dobu existence účtu. Po smazání účtu je hned odstraníme z databáze.</li>
+	<li>Zálohy: denní, uchováváme posledních 14 — smazaná data z nich tedy zmizí nejpozději do 14 dnů.</li>
+	<li>Technické a chybové záznamy: jen po dobu nutnou k zajištění bezpečnosti a vyřešení chyby.</li>
+	<li>Token banky: do odpojení banky nebo smazání účtu.</li>
+</ul>
+
+<h2>5. Zabezpečení</h2>
+<p>Hesla ukládáme jen jako jednosměrný otisk (bcrypt), přístupové údaje k bance šifrujeme, spojení probíhá přes HTTPS a formuláře jsou chráněny proti podvrženým požadavkům. Přístup k serveru má pouze provozovatel.</p>
+
+<h2>6. Tvoje práva</h2>
+<ul>
+	<li><b>Přístup a přenositelnost</b> — data vidíš v aplikaci, transakce si stáhneš v <i>Nastavení profilu → Export</i> (CSV); na požádání pošleme kompletní výpis.</li>
+	<li><b>Oprava</b> — údaje upravíš přímo v aplikaci.</li>
+	<li><b>Výmaz</b> — <i>Nastavení profilu → Smazat účet</i> smaže účet i data okamžitě.</li>
+	<li><b>Omezení zpracování a námitka</b> proti zpracování na základě oprávněného zájmu.</li>
+	<li><b>Stížnost</b> u Úřadu pro ochranu osobních údajů, Pplk. Sochora 27, 170 00 Praha 7, <a href="https://uoou.gov.cz" target="_blank" rel="noopener">uoou.gov.cz</a>.</li>
+</ul>
+<p>Žádosti vyřídíme bez zbytečného odkladu, nejpozději do jednoho měsíce. Pro ověření totožnosti napiš z e-mailu, se kterým jsi registrovaný(á).</p>
+
+<h2>7. Cookies</h2>
+<p>Používáme jen technicky nezbytné cookies, podrobnosti jsou na stránce <a n:href=":Frontend:Legal:cookies">Cookies</a>.</p>
+
+<h2>8. Změny</h2>
+<p>Zásady můžeme aktualizovat. O podstatných změnách tě informujeme e-mailem nebo v aplikaci; datum účinnosti je vždy uvedeno nahoře.</p>

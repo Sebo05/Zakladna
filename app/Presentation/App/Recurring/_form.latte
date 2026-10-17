@@ -1,0 +1,22 @@
+{import '../@components.latte'}
+{form form, class: 'space-y-5'}
+	{include formErrors, form: $form}
+	<div class="segmented w-full grid grid-cols-2" x-data="{ t: '{$form['type']->getValue()}' }">
+		<label n:foreach="$form['type']->getItems() as $key => $caption" class="text-center cursor-pointer transition py-1.5!" :class="t === '{$key}' ? 'on' : ''">
+			<input type="radio" name="type" value="{$key}" class="sr-only" x-model="t"> {$caption}
+		</label>
+	</div>
+	{include field, form: $form, name: 'description'}
+	<div class="grid sm:grid-cols-2 gap-4">
+		{include field, form: $form, name: 'amount'}
+		{include field, form: $form, name: 'category'}
+	</div>
+	<div class="grid sm:grid-cols-3 gap-4">
+		{include field, form: $form, name: 'period'}
+		{include field, form: $form, name: 'nextDate'}
+		{include field, form: $form, name: 'endDate'}
+	</div>
+	<p class="text-xs text-muted">Nic se nezapisuje samo — když platba přijde na řadu, ukážu ti ji na přehledu a pošlu e-mail. Ty ji jedním klikem zapíšeš nebo přeskočíš.</p>
+	<datalist id="categories"><option n:foreach="$categories as $c" value="{$c}"></option></datalist>
+	<div class="pt-2">{input send, class: 'btn btn-primary btn-lg'}</div>
+{/form}

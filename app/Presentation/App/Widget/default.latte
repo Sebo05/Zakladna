@@ -1,0 +1,15 @@
+{block title}Připojit widget{/block}
+
+{block content}
+<div class="max-w-md mx-auto pt-6 sm:pt-12">
+	<div class="card p-6 sm:p-8 text-center rise rise-1">
+		<span class="tile bg-sky-500/12 text-sky-500 w-14 h-14 rounded-2xl mx-auto"><i data-lucide="monitor" class="w-7! h-7!"></i></span>
+		<h1 class="page-title mt-5">Připojit widget na plochu?</h1>
+		<p class="page-sub mt-2">Widget pro Windows bude číst tvůj přehled jako <strong class="text-ink">{$currentUser->email}</strong>: zůstatek měsíce, blížící se termíny a události. Nic nemůže měnit.</p>
+		<form method="post" action="{link allow!}" class="mt-6 flex flex-col gap-2">
+			<button class="btn btn-primary btn-lg w-full"><i data-lucide="check" class="w-4 h-4"></i>Povolit</button>
+			<a n:href="Dashboard:default" class="btn btn-secondary btn-lg w-full">Zrušit</a>
+		</form>
+		<p class="text-xs text-muted mt-5">Pokud jsi widget právě nespustil(a), klikni na Zrušit. Odpojit ho můžeš kdykoli v profilu.</p>
+	</div>
+</div>

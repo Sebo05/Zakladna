@@ -1,0 +1,53 @@
+{import '../@components.latte'}
+{block title}Opakované platby{/block}
+
+{block content}
+<header class="flex flex-wrap items-end justify-between gap-4 mb-8 rise">
+	<div>
+		<h1 class="page-title">Opakované platby</h1>
+		<p class="page-sub">Nájem, předplatné, leasing — připomenu, ty jen potvrdíš.</p>
+	</div>
+	<a n:href="add" class="btn btn-primary"><i data-lucide="plus" class="w-4 h-4"></i>Nová platba</a>
+</header>
+
+{include '../@dueRecurring.latte', due: $due}
+
+{if $items}
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 rise rise-2">
+		<div class="card p-5 flex items-center gap-4">
+			<span class="tile bg-neg/12 text-neg w-11 h-11 rounded-xl"><i data-lucide="arrow-up-right"></i></span>
+			<div><div class="eyebrow">Pravidelné výdaje / měsíc</div><div class="num text-xl font-semibold">{$monthly['expense']|czk}</div></div>
+		</div>
+		<div class="card p-5 flex items-center gap-4">
+			<span class="tile bg-pos/12 text-pos w-11 h-11 rounded-xl"><i data-lucide="arrow-down-left"></i></span>
+			<div><div class="eyebrow">Pravidelné příjmy / měsíc</div><div class="num text-xl font-semibold">{$monthly['income']|czk}</div></div>
+		</div>
+	</div>
+
+	<div class="card rise rise-3">
+		<div n:foreach="$items as $r" n:class="'list-row group', $r->finished ? 'opacity-50'">
+			<span n:class="'tile', $r->type === 'income' ? 'bg-pos/12 text-pos' : 'bg-accent/12 text-accent'"><i data-lucide="repeat"></i></span>
+			<div class="flex-1 min-w-0">
+				<div class="font-medium truncate">{$r->description}</div>
+				<div class="text-xs text-muted">
+					{$r->category} · {App\Presentation\App\Recurring\RecurringPresenter::Periods[$r->period]}
+					{if $r->finished} · ukončeno{else} · příště {$r->nextDate|czShortDate}{/if}
+					{if $r->endDate && !$r->finished} · do {$r->endDate|czShortDate}{/if}
+				</div>
+			</div>
+			<div n:class="'num font-semibold whitespace-nowrap', $r->type === 'income' ? 'text-pos' : ''">{$r->type === 'income' ? '+' : '−'}{$r->amount|czk}</div>
+			<div class="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition">
+				<a n:href="edit, id: $r->id" class="btn-icon" title="Upravit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+				<a n:href="delete, id: $r->id" class="btn-icon hover:text-neg" title="Smazat" data-confirm="Smazat opakovanou platbu {$r->description}?"><i data-lucide="trash-2" class="w-4 h-4"></i></a>
+			</div>
+		</div>
+	</div>
+{else}
+	<div class="card p-10 text-center rise rise-2">
+		<span class="tile bg-accent/12 text-accent w-14 h-14 rounded-2xl mx-auto"><i data-lucide="repeat" class="w-7 h-7"></i></span>
+		<h2 class="text-lg font-semibold mt-4">Žádné opakované platby</h2>
+		<p class="text-muted mt-1 max-w-sm mx-auto">Přidej nájem, Netflix nebo leasing a už je nebudeš zadávat ručně každý měsíc.</p>
+		<a n:href="add" class="btn btn-primary mt-5"><i data-lucide="plus" class="w-4 h-4"></i>Přidat první</a>
+	</div>
+{/if}
+{/block}

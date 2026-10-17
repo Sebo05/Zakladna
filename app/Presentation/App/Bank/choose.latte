@@ -1,0 +1,13 @@
+{import '../@components.latte'}
+{block title}Vyber účet{/block}
+
+{block content}
+{include formHeader, title: 'Který účet stahovat?', back: $presenter->link('default'), backLabel: 'Banka'}
+<div class="card max-w-2xl rise rise-2">
+	<a n:foreach="$list as $acc" n:href="choose!, ref: $acc['id']" class="list-row hover:bg-surface-2 transition">
+		<span class="tile bg-accent/12 text-accent"><i data-lucide="landmark"></i></span>
+		<span class="flex-1 font-mono text-sm">{$acc['label']}</span>
+		<i data-lucide="chevron-right" class="w-5 h-5 text-faint"></i>
+	</a>
+</div>
+{/block}

@@ -18,11 +18,15 @@ services:
 	- App\Core\RouterFactory::createRouter
 
 	adminAuthenticator:
-		factory: App\AdminModule\Authenticator
+		factory: App\Security\AdminAuthenticator
 		autowired: self
 
+	- App\Model\Notification\Notifier(appUrl: %appUrl%, mailFrom: %mailFrom%, tempDir: %tempDir%)
+
+	- App\Security\GoogleAuth(%google.clientId%, %google.clientSecret%)
+
 	userAuthenticator:
-		factory: App\FrontendModule\Authenticator
+		factory: App\Security\UserAuthenticator
 		autowired: self
 
 
@@ -32,3 +36,10 @@ search:
 			- '*Facade.php'
 			- '*Factory.php'
 			- '*Service.php'
+
+
+decorator:
+	App\Presentation\Frontend\BasePresenter:
+		setup:
+			- $operator = %operator%
+			- $legalDate = %legalDate%

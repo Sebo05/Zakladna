@@ -1,0 +1,594 @@
+/* =========================================================
+   Cookie bar – kompaktní karta (design dle Figmy)
+   Barvy/typografie: Space Grotesk, zelená #85b929, tmavá #141414
+   ========================================================= */
+
+.cookie-bar {
+  --cb-green: #141414;
+  --cb-green-dark: #000;
+  --cb-dark: #141414;
+  --cb-text: #141414;
+  --cb-muted: #444;
+  --cb-line: #e5e5e5;
+  --cb-radius: 12px;
+  --cb-pill: 999px;
+}
+
+.cookie-bar * {
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  box-sizing: border-box;
+}
+.cookie-bar img {
+  margin: 0;
+}
+
+/* ---------- Pozicování karty ---------- */
+.cookie-bar-modal {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: auto;
+  top: auto;
+  transform: none;
+  z-index: 2000;
+  max-width: calc(100% - 40px);
+  width: 500px;
+}
+
+.cookie-bar {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  border-radius: var(--cb-radius);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+  padding: 24px;
+}
+
+.cookie-bar form {
+  overflow: auto;
+  max-height: 80vh;
+}
+
+/* ---------- První krok (úvodní text + tlačítka) ---------- */
+.cookie-bar .first-step {
+  display: block;
+}
+.cookie-bar .content-step {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.cookie-bar .content-step .left-box {
+  width: 100%;
+  padding-left: 0;
+}
+.cookie-bar .content-step .left-box .text {
+  width: 100%;
+  max-width: none;
+}
+.cookie-bar .content-step .left-box .left-box-step {
+  display: block;
+}
+
+/* Hlavička */
+.left-box .text h3 {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--cb-text);
+  margin: 0 0 6px;
+}
+.left-box .text > p {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--cb-text);
+  margin: 0;
+}
+
+/* Skryté prvky z původního designu */
+.cookie-bar .logo,
+.background-image-left,
+.background-image-right,
+.left-box .text .main-title,
+.left-box .text .setting {
+  display: none;
+}
+
+/* ---------- Řada tlačítek ---------- */
+.cookie-bar .content-step .right-box {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cb-line);
+}
+.cookie-bar form .row {
+  padding: 0;
+  margin: 0;
+}
+
+/* Základ tlačítka */
+.cb-btn,
+.cookie-bar form .row .green-button input,
+.cookie-bar form .row .btn-outline,
+.cookie-bar form .row .button-secondary,
+.cookie-bar form .setting-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.55;
+  cursor: pointer;
+  border: none;
+  outline: 0;
+  white-space: nowrap;
+}
+
+/* Primary – Povolit vše / Souhlasím s vybranými */
+.cookie-bar form .row .green-button {
+  display: inline-flex;
+  background: var(--cb-green);
+  border-radius: var(--cb-pill);
+  width: auto;
+  height: auto;
+}
+.cookie-bar form .row .green-button:hover {
+  background: var(--cb-green-dark);
+}
+.cookie-bar form .row .green-button input {
+  background: transparent;
+  color: #fff;
+  padding: 8px 28px;
+  border-radius: var(--cb-pill);
+}
+.cookie-bar form .row .green-button img {
+  display: none;
+}
+
+/* Outline – Odmítnout */
+.cookie-bar form .row .btn-outline {
+  background: #fff;
+  color: var(--cb-dark);
+  border: 1.5px solid var(--cb-dark);
+  border-radius: var(--cb-pill);
+  padding: 8px 28px;
+}
+.cookie-bar form .row .btn-outline:hover {
+  background: var(--cb-dark);
+  color: #fff;
+}
+
+/* Tertiary – Nastavení (s chevronem) */
+.cookie-bar form .setting-toggle {
+  background: transparent;
+  color: var(--cb-dark);
+  margin: 0;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.cookie-bar form .setting-toggle > * {
+  pointer-events: none;
+}
+/* Šipka je pozadím, ne <img> s src doplňovaným z JS – ten se po znovuotevření lišty
+   v Chrome překreslil až při najetí myší. */
+.cookie-bar form .setting-toggle .chevron {
+  display: block;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 8px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12.828' height='7.414' viewBox='0 0 12.828 7.414'%3E%3Cpath d='M0,0,5,5l5-5' transform='translate(1.414 1.414)' fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/%3E%3C/svg%3E") no-repeat center / contain;
+  transition: transform 0.2s;
+}
+.cookie-bar.active form .setting-toggle .chevron {
+  transform: rotate(180deg);
+}
+
+/* Souhlasím s vybranými – jen v rozbaleném nastavení */
+.cookie-bar form .button-secondary-wrap {
+  display: none;
+}
+.cookie-bar.active form .button-secondary-wrap {
+  display: inline-flex;
+  order: -1;
+}
+.cookie-bar form .button-secondary-wrap .green-button {
+  background: var(--cb-green);
+}
+/* V rozbaleném nastavení je hlavní volba „Souhlasím s vybranými“, „Povolit vše“ ustoupí do outline */
+.cookie-bar.active form .right-box > .row:not(.button-secondary-wrap) .green-button {
+  background: #fff;
+  border: 1.5px solid var(--cb-dark);
+}
+.cookie-bar.active form .right-box > .row:not(.button-secondary-wrap) .green-button:hover {
+  background: var(--cb-dark);
+}
+.cookie-bar.active form .right-box > .row:not(.button-secondary-wrap) .green-button input {
+  color: var(--cb-dark);
+  padding: 6.5px 26.5px;
+}
+.cookie-bar.active form .right-box > .row:not(.button-secondary-wrap) .green-button:hover input {
+  color: #fff;
+}
+
+/* Klávesnice */
+.cookie-bar form input[type="button"]:focus-visible,
+.cookie-bar form .setting-toggle:focus-visible,
+.cookie-bar form .row-check .row-label label input:focus-visible + .indicator {
+  outline: 2px solid var(--cb-green-dark);
+  outline-offset: 2px;
+}
+
+/* ---------- Reopen ikona ---------- */
+/* !important – přebíjí staré pravidlo z bundlu CookieBar.css (25×25, roh vlevo dole) */
+/* Zavřená lišta: černobílé kulaté tlačítko, při najetí se invertuje a sušenka se pootočí */
+.cookie-bar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 !important;
+  background: #fff;
+  position: fixed;
+  bottom: 16px !important;
+  left: 16px !important;
+  border: 1px solid #e4e4e4;
+  box-shadow: 0 4px 16px rgba(20, 20, 20, .12) !important;
+  border-radius: 50% !important;
+  z-index: 2001;
+  overflow: hidden;
+  transition: background-color .2s cubic-bezier(.2, 0, 0, 1), border-color .2s cubic-bezier(.2, 0, 0, 1), transform .2s cubic-bezier(.2, 0, 0, 1), box-shadow .2s cubic-bezier(.2, 0, 0, 1);
+}
+.cookie-bar-icon:hover {
+  background: #141414;
+  border-color: #141414;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20, 20, 20, .2) !important;
+}
+.cookie-bar-icon:focus-within {
+  outline: 2px solid #141414;
+  outline-offset: 3px;
+}
+.cookie-bar-icon button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 11px !important;
+  border: none;
+  background-color: transparent !important;
+  cursor: pointer;
+  outline: none;
+}
+.cookie-bar-icon button img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  pointer-events: none;
+  transition: filter .2s cubic-bezier(.2, 0, 0, 1), transform .3s cubic-bezier(.2, 0, 0, 1);
+}
+.cookie-bar-icon:hover button img {
+  filter: invert(1);
+  transform: rotate(-20deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cookie-bar-icon,
+  .cookie-bar-icon button img { transition: none; }
+  .cookie-bar-icon:hover,
+  .cookie-bar-icon:hover button img { transform: none; }
+}
+
+/* =========================================================
+   Druhý krok – rozbalené nastavení (akordeon kategorií)
+   ========================================================= */
+.cookie-bar form .second-step {
+  display: none;
+  overflow: auto;
+  max-height: 43vh;
+  width: 100%;
+}
+.cookie-bar.active form .second-step {
+  display: block;
+  margin-top: 12px;
+}
+/* Poznámka pod kategoriemi – schválně mimo .second-step, aby ji nesežral jeho scroll. */
+.cookie-bar form .second-step-note {
+  display: none;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.43;
+  color: var(--cb-text);
+  margin: 12px 0 0;
+  text-align: left;
+}
+.cookie-bar.active form .second-step-note {
+  display: block;
+}
+.left-box .second-step .text p {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.43;
+  color: var(--cb-text);
+  margin: 0 0 8px;
+}
+
+/* Rámeček obaluje celou kartu, aby po rozbalení zůstal popis uvnitř. */
+.cookie-bar form .row-check {
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid var(--cb-line);
+  border-radius: 8px;
+  transition: border-color 0.15s;
+}
+.cookie-bar form .row-check:hover,
+.cookie-bar form .row-check.active {
+  border-color: #bdbdbd;
+}
+.cookie-bar form .row-check .row-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.43;
+  color: var(--cb-text);
+  text-align: left;
+}
+.cookie-bar form .row-check > span {
+  display: none;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cb-muted);
+  /* !important – CSS webu sem dává šedé pozadí, které by uvnitř karty vytvořilo druhý blok */
+  background: transparent !important;
+  padding: 0 16px 14px 36px;
+  text-align: left;
+}
+.cookie-bar form .row-check.active > span {
+  display: block;
+}
+.cookie-bar .second-step .row-check .row-label > span {
+  display: none !important;
+}
+.cookie-bar .second-step .row-check .row-label > span[data-cookie-bar-accordion-toggle] {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  /* Zděděné z CSS webu (padding-left 31.8px + text-indent -31.8px pro starý markup) –
+     ve flexu to táhne šipku přes text, takže to tady nulujeme. */
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+.cookie-bar .second-step .row-check .row-label > span[data-cookie-bar-accordion-toggle] img {
+  display: inline-block;
+  width: 12px;
+  height: auto;
+  flex: 0 0 12px;
+  opacity: 0.55;
+  transition: transform 0.2s, opacity 0.15s;
+}
+.cookie-bar .second-step .row-check .row-label > span[data-cookie-bar-accordion-toggle]:hover img {
+  opacity: 1;
+}
+.cookie-bar .second-step .row-check.active .row-label > span[data-cookie-bar-accordion-toggle] img {
+  transform: rotate(180deg);
+}
+.cookie-bar form .row-check .cookies-count {
+  color: var(--cb-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* Přepínač (toggle switch) – 48×24, knob 16px, padding 4px */
+.cookie-bar form .row-check .row-label label {
+  position: relative;
+  width: 48px;
+  max-width: 48px;
+  flex: 0 0 48px;
+  height: 24px;
+  cursor: pointer;
+}
+.cookie-bar form .row-check .row-label label input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.cookie-bar form .row-check .row-label label input + .indicator {
+  position: absolute;
+  inset: 0;
+  /* !important – přebíjí staré pravidlo z bundlu www/frontend/css/Components/CookieBar/CookieBar.css (55×24) */
+  width: 48px !important;
+  height: 24px !important;
+  background: #d3d4d4;
+  border-radius: var(--cb-pill);
+  transition: background 0.2s;
+}
+.cookie-bar form .row-check .row-label label input:checked + .indicator {
+  background: var(--cb-green);
+}
+.cookie-bar form .row-check .row-label label input:disabled + .indicator {
+  opacity: 0.7;
+}
+.cookie-bar form .row-check .row-label label input + .indicator:before {
+  content: "";
+  position: absolute;
+  /* !important – staré pravidlo z bundlu nastavuje right:2px a 20×20, což knob vytlačí mimo pilulku */
+  top: 4px !important;
+  left: 4px !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+.cookie-bar form .row-check .row-label label input:checked + .indicator:before {
+  transform: translateX(24px);
+}
+.cookie-bar form .row-check .row-label label .indicator > span {
+  display: none;
+}
+
+/* Panel s konkrétními cookies uvnitř kategorie */
+.cookie-bar form .row-check > span .panel {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--cb-line);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.cookie-bar form .row-check > span .panel .rows {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cookie-bar form .row-check > span .panel .rows .left {
+  display: flex;
+  align-items: center;
+}
+.cookie-bar form .row-check > span .panel .rows .left h3 {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--cb-text);
+  margin: 0;
+}
+.cookie-bar form .row-check > span .panel .rows .left h3 span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #ededed;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cb-muted);
+  margin-left: 10px;
+}
+.cookie-bar form .row-check > span .panel .rows .left a {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--cb-green);
+  text-decoration: underline;
+  display: flex;
+  align-items: center;
+  margin-left: 2rem;
+}
+.cookie-bar form .row-check > span .panel .rows .left a img {
+  margin-left: 6px;
+}
+.cookie-bar form .row-check > span .panel .rows > img {
+  width: 12px;
+  transform: rotate(0deg);
+}
+.cookie-bar form .row-check > span .panel.active .rows > img {
+  transform: rotate(180deg);
+}
+.cookie-bar form .row-check > span .panel .contents {
+  display: none;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.cookie-bar form .row-check > span .panel.active .contents {
+  display: block;
+}
+.cookie-bar form .row-check > span .panel .contents h3 {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--cb-text);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.cookie-bar form .row-check > span .panel .contents > p {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cb-muted);
+  margin: 0 0 16px;
+}
+.cookie-bar form .row-check > span .panel .contents .bottom {
+  border-top: 1px solid var(--cb-line);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+}
+.cookie-bar form .row-check > span .panel .contents .bottom p {
+  width: 50%;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cb-muted);
+  margin: 0;
+}
+
+/* ---------- Responsivita ---------- */
+@media only screen and (max-width: 560px) {
+  .cookie-bar-modal {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+  }
+  .cookie-bar {
+    padding: 20px;
+  }
+  .right-box {
+    gap: 12px;
+  }
+  .cookie-bar form .row .green-button,
+  .cookie-bar form .row .green-button input,
+  .cookie-bar form .row .btn-outline {
+    width: 100%;
+  }
+}
+
+@media only screen and (max-width: 510px) {
+  .cookie-bar form .row-check > span .panel .rows .left a {
+    margin-left: 1rem;
+  }
+  .cookie-bar form .row-check > span .panel .contents .bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cookie-bar form .row-check > span .panel .contents .bottom p {
+    width: 100%;
+  }
+}
+
+/* Scrollbar druhého kroku */
+.cookie-bar form .second-step::-webkit-scrollbar {
+  width: 5px;
+  background-color: #efefef;
+}
+.cookie-bar form .second-step::-webkit-scrollbar-thumb {
+  background-color: #b5b5b5;
+  border-radius: 3px;
+}

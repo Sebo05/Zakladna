@@ -27,9 +27,15 @@ final class RouterFactory
 
 		// Frontend (public)
 		$frontend = $router->withModule('Frontend');
+		$frontend->addRoute('login/google', 'Auth:google');
 		$frontend->addRoute('login', 'Auth:login');
 		$frontend->addRoute('register', 'Auth:register');
 		$frontend->addRoute('logout', 'Auth:logout');
+		$frontend->addRoute('robots.txt', 'Seo:robots');
+		$frontend->addRoute('sitemap.xml', 'Seo:sitemap');
+		$frontend->addRoute('podminky', 'Legal:terms');
+		$frontend->addRoute('ochrana-osobnich-udaju', 'Legal:privacy');
+		$frontend->addRoute('cookies', 'Legal:cookies');
 		// Any single-segment URL like /o-nas → Page:detail(slug=o-nas)
 		$frontend->addRoute('<slug [a-z0-9-]+>', 'Page:detail');
 		$frontend->addRoute('<presenter>/<action>[/<id>]', 'Home:default');

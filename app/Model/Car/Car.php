@@ -17,6 +17,7 @@ use App\Model\FuelRecord\FuelRecord;
  * @property string $name
  * @property string $licensePlate
  * @property string $plateCountry {default CZ}
+ * @property string|null $vin
  * @property int $year
  * @property float $purchasePrice {default 0}
  * @property string|null $photo
@@ -27,6 +28,9 @@ use App\Model\FuelRecord\FuelRecord;
  */
 final class Car extends Entity
 {
+	/** Uploaded car photos (served from www/upload/cars/<photo>) */
+	public const PhotoDir = __DIR__ . '/../../../www/upload/cars';
+
 	/** EU distinguishing signs offered in the plate country picker */
 	public const PlateCountries = [
 		'CZ' => 'Česko', 'SK' => 'Slovensko', 'D' => 'Německo', 'A' => 'Rakousko', 'PL' => 'Polsko',

@@ -1,0 +1,23 @@
+{* Due recurring payments waiting for confirmation. Params: $due (list<RecurringTransaction>) *}
+<section n:if="$due" class="card p-5 mb-6 rise border-l-4! border-warn!">
+	<div class="flex items-center gap-3 mb-3">
+		<span class="tile bg-warn/15 text-warn"><i data-lucide="repeat"></i></span>
+		<div>
+			<h2 class="section-title">Čeká na potvrzení</h2>
+			<p class="text-xs text-muted">Opakované platby, které přišly na řadu.</p>
+		</div>
+	</div>
+	<div class="divide-y divide-line">
+		<div n:foreach="$due as $r" class="flex flex-wrap items-center gap-3 py-2.5">
+			<div class="flex-1 min-w-40">
+				<div class="font-medium text-[15px]">{$r->description}</div>
+				<div class="text-xs text-muted">{$r->category} · {$r->nextDate|czShortDate}</div>
+			</div>
+			<div n:class="'num font-semibold', $r->type === 'income' ? 'text-pos' : ''">{$r->type === 'income' ? '+' : '−'}{$r->amount|czk}</div>
+			<div class="flex gap-1.5">
+				<a href="{plink :App:Recurring:default, do: 'confirm', id: $r->id}" class="btn btn-primary btn-sm"><i data-lucide="check" class="w-4 h-4"></i>Zapsat</a>
+				<a href="{plink :App:Recurring:default, do: 'skip', id: $r->id}" class="btn btn-secondary btn-sm" title="Tento měsíc nezapisovat"><i data-lucide="skip-forward" class="w-4 h-4"></i>Přeskočit</a>
+			</div>
+		</div>
+	</div>
+</section>

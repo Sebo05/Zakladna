@@ -1,0 +1,31 @@
+{* Legal document: admin-edited text ($custom) or the built-in _<doc>.latte *}
+{block title}{$meta['title']}{/block}
+{block description}{$meta['lead']}{/block}
+
+{block content}
+<div class="max-w-6xl mx-auto px-5 py-14 sm:py-20 grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-10 lg:gap-16">
+	<aside class="min-w-0 lg:sticky lg:top-24 self-start rise">
+		<div class="eyebrow mb-3">Právní informace</div>
+		<nav class="flex lg:flex-col gap-1 overflow-x-auto -mx-1 px-1">
+			{foreach ['terms' => 'Podmínky používání', 'privacy' => 'Ochrana osobních údajů', 'cookies' => 'Cookies'] as $action => $label}
+				<a n:href="$action" n:class="'nav-link whitespace-nowrap', $presenter->isLinkCurrent($action) ? 'active'">{$label}</a>
+			{/foreach}
+		</nav>
+	</aside>
+
+	<article class="min-w-0 max-w-3xl rise rise-2">
+		<h1 class="text-4xl sm:text-5xl font-bold tracking-tight">{$meta['title']}</h1>
+		<p class="text-lg text-muted mt-4">{$meta['lead']}</p>
+		<p class="text-sm text-faint mt-3">Účinné od {$legalDate|date:'j. n. Y'}</p>
+
+		<div class="card p-5 mt-8 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+			<div><span class="text-muted">Provozovatel:</span> <b>{$operator['name']}</b>{if $operator['city']}, {$operator['city']}{/if}</div>
+			<div><span class="text-muted">Kontakt:</span> <a href="mailto:{$operator['email']}" class="text-accent">{$operator['email']}</a></div>
+		</div>
+
+		<div class="prose legal max-w-none mt-10">
+			{if $custom !== null}{$custom|noescape}{else}{include "_$doc.latte"}{/if}
+		</div>
+	</article>
+</div>
+{/block}

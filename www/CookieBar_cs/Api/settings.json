@@ -1,0 +1,13 @@
+[
+	{
+		"name": "Základna",
+		"url": "",
+		"technical": true,
+		"items": [
+			{"name": "PHPSESSID", "description": "Přihlášení a relace.", "expire": "do zavření prohlížeče, s „Zapamatovat si mě“ 14 dní", "type": "HTTP cookie"},
+			{"name": "_nss", "description": "Ochrana formulářů před podvržením (SameSite).", "expire": "do zavření prohlížeče", "type": "HTTP cookie"},
+			{"name": "_CookieBarStorage_*", "description": "Pamatuje si tvou volbu v cookie liště.", "expire": "1 rok", "type": "HTTP cookie"},
+			{"name": "theme", "description": "Světlý / tmavý režim.", "expire": "dokud ho nesmažeš", "type": "local storage"}
+		]
+	}
+]

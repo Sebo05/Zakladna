@@ -1,0 +1,18 @@
+<div class="panel" data-cookie-bar-accordion>
+	<div class="rows" data-cookie-bar-accordion-toggle>
+		<div class="left">
+			<h3>
+				${name}
+				${typeof items !== 'undefined' ? `<span>${items.length}</span>` : ``}
+			</h3>
+			${url ? `
+				<a href="${url}" target="_blank">
+					<span>Zjistit více o tomto poskytovateli</span>
+					<img data-cookie-bar-image="provider-link.svg" alt="provider link icon">
+				</a>
+				` : ``}
+		</div>
+		<img data-cookie-bar-image="arrow.svg" alt="arrow icon">
+	</div>
+	<div class="contents">${renderItems}</div>
+</div>

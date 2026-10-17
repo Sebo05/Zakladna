@@ -18,6 +18,7 @@ use App\Model\Car\Car;
  * @property Car|null $car {m:1 Car, oneSided=true}
  * @property string|null $carName
  * @property DateTimeImmutable $date
+ * @property string|null $externalId
  */
 final class Transaction extends Entity
 {

@@ -1,6 +1,21 @@
 # see https://doc.nette.org/en/configuring
 
 parameters:
+	# public URL used in e-mails and the bank OAuth callback (override in local.neon on the server)
+	appUrl: http://ano.test
+	mailFrom: 'Základna <noreply@zakladna.local>'
+	# provozovatel = správce osobních údajů; uvádí se v podmínkách, zásadách GDPR a patičce
+	operator:
+		name: '[Jméno Příjmení]'
+		email: '[kontakt@example.cz]'
+		city: '[Město]'
+	# datum účinnosti právních dokumentů — při změně textu posuň
+	legalDate: '2026-10-17'
+	# Přihlášení přes Google — OAuth client z Google Cloud Console (redirect URI: <appUrl>/login/google).
+	# Skutečné hodnoty dej do config/local.neon; prázdné = tlačítko Google se neukáže.
+	google:
+		clientId: ''
+		clientSecret: ''
 
 
 application:

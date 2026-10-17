@@ -1,0 +1,6 @@
+{import '../@components.latte'}
+{block title}Upravit opakovanou platbu{/block}
+{block content}
+{include formHeader, title: $item->description, back: $presenter->link('default'), backLabel: 'Opakované platby'}
+<div class="card p-6 sm:p-8 max-w-2xl rise rise-2">{include _form.latte}</div>
+{/block}

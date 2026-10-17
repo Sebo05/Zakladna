@@ -29,3 +29,12 @@
 .vscode/
 Thumbs.db
 .DS_Store
+
+# App encryption key (bank secrets) — generated on first use, back it up with the DB
+/config/app.key
+
+# DB dumps from bin/cron.php
+/backup/
+
+# Bank client certificates (ČSOB, RB)
+/cert/

@@ -1,6 +1,4 @@
 url=https://your-zakladna-host.example
-email=you@example.com
-password=your-password
 topmost=1
 locked=0
 opacity=100
